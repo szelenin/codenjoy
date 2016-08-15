@@ -32,22 +32,11 @@
     <context:component-scan base-package="com.codenjoy.dojo.services"/>
     <context:component-scan base-package="com.codenjoy.dojo.transport"/>
 
-    <bean id="actionLogger" class="com.codenjoy.dojo.services.dao.ActionLogger">
-        <constructor-arg value="database/logs.db"/>
-        <constructor-arg value="20"/>
+    <bean class="org.springframework.beans.factory.config.PropertyPlaceholderConfigurer">
+        <property name="location" value="classpath:/com/codenjoy/dojo/server/codenjoy.properties"/>
     </bean>
 
-    <bean id="playerGameSaver" class="com.codenjoy.dojo.services.dao.PlayerGameSaver">
-        <constructor-arg value="database/saves.db"/>
-    </bean>
-
-    <bean id="registration" class="com.codenjoy.dojo.services.dao.Registration">
-        <constructor-arg value="database/users.db"/>
-    </bean>
-
-    <bean id="payment" class="com.codenjoy.dojo.services.dao.Payment">
-        <constructor-arg value="database/payment.db"/>
-    </bean>
+    <import resource="applicationContext-database.xml"/>
 
     <bean id="timerService" class="com.codenjoy.dojo.services.TimerService" init-method="init">
         <property name="period" value="1000"/>
@@ -59,10 +48,6 @@
 
     <bean name="wsPlayerController" class="com.codenjoy.dojo.services.WsPlayerController" >
         <property name="transport" ref="wsPlayerTransport"/>
-    </bean>
-
-    <bean class="org.springframework.beans.factory.config.PropertyPlaceholderConfigurer">
-        <property name="location" value="classpath:/com/codenjoy/dojo/server/codenjoy.properties"/>
     </bean>
 
     <bean name="restSenderExecutorService" class="java.util.concurrent.ScheduledThreadPoolExecutor">

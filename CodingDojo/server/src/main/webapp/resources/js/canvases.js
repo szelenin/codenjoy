@@ -21,7 +21,7 @@
  */
 var currentBoardSize = null;
 
-function initCanvases(players, allPlayersScreen, singleBoardGame, boardSize, gameName, contextPath, enablePlayerInfo){
+function initCanvases(players, allPlayersScreen, singleBoardGame, boardSize, gameName, enablePlayerInfo){
     var canvases = new Object();
     var infoPools = new Object();
     currentBoardSize = boardSize;
@@ -40,18 +40,6 @@ function initCanvases(players, allPlayersScreen, singleBoardGame, boardSize, gam
         infoPools[player] = [];
     }
 
-    function constructUrl() {
-        var url = contextPath + "screen?";
-
-        var playersPresent = !!Object.keys(players)[0];
-        if (!playersPresent) {
-            allPlayersScreen = true;
-        }
-
-        var users = ((!allPlayersScreen && playersPresent) ? ("&" + players[Object.keys(players)[0]]) : "");
-        return url + "allPlayersScreen=" + allPlayersScreen + users;
-    }
-
     function decode(gameName, color) {
         return plots[color];
     }
@@ -61,14 +49,15 @@ function initCanvases(players, allPlayersScreen, singleBoardGame, boardSize, gam
         var drawLayer = function(layer){
             var x = 0;
             var y = boardSize - 1;
-            $.each(layer, function (index, color) {
+            for (var index in layer) {
+                var color = layer[index];
                 playerCanvas.drawPlot(decode(gameName, color), x, y);
                 x++;
                 if (x == boardSize) {
                    x = 0;
                    y--;
                 }
-            });
+            }
         }
 
         playerCanvas.clear();
@@ -146,18 +135,28 @@ function initCanvases(players, allPlayersScreen, singleBoardGame, boardSize, gam
 
     function createCanvas(canvasName) {
         var canvasImages = $('#systemCanvas img');
-        var plotSize = canvasImages[0].width;
         var canvas = $("#" + canvasName);
-        var canvasSize = plotSize * boardSize;
-        if (canvas[0].width != canvasSize || canvas[0].height != canvasSize) {
-            canvas[0].width = canvasSize;
-            canvas[0].height = canvasSize;
+
+        var plotSize = 0;
+        var canvasSize = 0;
+        var calcSize = function() {
+            plotSize = canvasImages[0].width;
+            canvasSize = plotSize * boardSize;
+            if (canvas[0].width != canvasSize || canvas[0].height != canvasSize) {
+                canvas[0].width = canvasSize;
+                canvas[0].height = canvasSize;
+            }
         }
 
         var plots = {};
         $.each(canvasImages, function(index, plot) {
             var color = plot.id;
             var image = new Image();
+            image.onload = function() {
+                if (plotSize == 0) {
+                    calcSize();
+                }
+            }
             image.src = plot.src;
             plots[color] = image;
         });
@@ -271,41 +270,4 @@ function initCanvases(players, allPlayersScreen, singleBoardGame, boardSize, gam
         drawUsersCanvas(data);
     });
 
-    function updatePlayersInfo() {
-        currentCommand = null; // for joystick.js
-        $.ajax({ url:constructUrl(),
-                error:function(data) {
-                    $('body').css('background-color', 'bisque');
-                },
-                success:function (data) {
-                    $('body').css('background-color', 'white');
-
-                    // TODO:1 Вот тут надо вообще другим запросом чат брать из другого скрина, чтобы тут им и не пахло
-                    if (chatLog == null) { // uses for chat.js
-                        chatLog = data['#CHAT'].messages;
-                    }
-                    delete data['#CHAT'];
-
-                    if (!!gameName) {  // TODO вот потому что dojo transport не делает подобной фильтрации - ее приходится делать тут.
-                        var filtered = {};
-                        for (var key in data) {
-                            if (data[key].gameName == gameName) {
-                                filtered[key] = data[key];
-                            }
-                        }
-
-                        data = filtered;
-
-                    }
-
-                    $('body').trigger("board-updated", data);
-                },
-                dataType:"json",
-                cache:false,
-                complete:updatePlayersInfo,
-                timeout:30000
-            });
-    }
-
-    updatePlayersInfo();
 }

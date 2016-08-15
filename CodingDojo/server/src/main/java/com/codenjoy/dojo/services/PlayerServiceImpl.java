@@ -46,6 +46,7 @@ import java.util.concurrent.locks.ReentrantReadWriteLock;
 public class PlayerServiceImpl implements PlayerService {
     public static final String CHAT = "#CHAT";
     private static Logger logger = LoggerFactory.getLogger(PlayerServiceImpl.class);
+    private static String BOT_EMAIL_SUFFIX = "-super-ai@codenjoy.com";
 
     private ReadWriteLock lock = new ReentrantReadWriteLock(true);
     private Map<Player, String> cacheBoards = new HashMap<Player, String>();
@@ -75,7 +76,7 @@ public class PlayerServiceImpl implements PlayerService {
 
             registerAIFor(name, gameName);
 
-            Player player = register(new PlayerSave(name, callbackUrl, gameName, 0, Protocol.WS.name()));
+            Player player = register(new PlayerSave(name, callbackUrl, gameName, 0, Protocol.WS.name(), null));
 
             return player;
         } finally {
@@ -84,7 +85,7 @@ public class PlayerServiceImpl implements PlayerService {
     }
 
     @Override
-    public void reloadAI(String name) { // TODO test me
+    public void reloadAI(String name) {
         lock.writeLock().lock();
         try {
             Player player = get(name);
@@ -96,13 +97,12 @@ public class PlayerServiceImpl implements PlayerService {
     }
 
     private void registerAIFor(String forPlayer, String gameName) {
-        String botEmail = "-super-ai@codenjoy.com";
-        if (forPlayer.contains("@codenjoy.com")) return;
+        if (forPlayer.endsWith(BOT_EMAIL_SUFFIX)) return;
 
         GameType gameType = gameService.getGame(gameName);
 
         // если в эту игру ai еще не играет
-        String aiName = gameName + botEmail;
+        String aiName = gameName + BOT_EMAIL_SUFFIX;
         PlayerGame playerGame = playerGames.get(aiName);
 
         if (playerGame instanceof NullPlayerGame) {
@@ -112,25 +112,38 @@ public class PlayerServiceImpl implements PlayerService {
 
     private void registerAI(String gameName, GameType gameType, String aiName) {
         if (gameType.newAI(aiName)) {
-            Player player = register(new PlayerSave(aiName, "127.0.0.1", gameName, 0, Protocol.WS.name()));
+            Player player = register(aiName, "127.0.0.1", gameName, 0, Protocol.WS.name(), null);
         }
     }
 
     @Override
     public Player register(PlayerSave save) {
-        Player player = get(save.getName());
-        boolean newPlayer = (player instanceof NullPlayer) || !save.getGameName().equals(player.getGameName());
+        String name = save.getName();
+        String gameName = save.getGameName();
+
+        GameType gameType = gameService.getGame(gameName);
+        if (name.endsWith(BOT_EMAIL_SUFFIX)) {
+            gameType.newAI(name);
+        }
+
+        return register(name, save.getCallbackUrl(), gameName, save.getScore(), save.getProtocol(), save.getSave());
+    }
+
+    private Player register(String name, String callbackUrl, String gameName, int score, String protocol, String data) {
+        Player player = get(name);
+        GameType gameType = gameService.getGame(gameName);
+
+        boolean newPlayer = (player instanceof NullPlayer) || !gameName.equals(player.getGameName());
         if (newPlayer) {
             playerGames.remove(player);
 
-            GameType gameType = gameService.getGame(save.getGameName());
-            PlayerScores playerScores = gameType.getPlayerScores(save.getScore());
+            PlayerScores playerScores = gameType.getPlayerScores(score);
             InformationCollector informationCollector = new InformationCollector(playerScores);
 
-            Game game = gameType.newGame(informationCollector, printer);
-            player = new Player(save.getName(), save.getCallbackUrl(),
+            Game game = gameType.newGame(informationCollector, printer, data);
+            player = new Player(name, callbackUrl,
                     gameType, playerScores, informationCollector,
-                    Protocol.valueOf(save.getProtocol().toUpperCase()));
+                    Protocol.valueOf(protocol.toUpperCase()));
 
             PlayerController controller = playerControllerFactory.get(player.getProtocol());
 

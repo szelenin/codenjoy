@@ -23,11 +23,13 @@ package com.codenjoy.dojo.snake.client;
  */
 
 
-import com.codenjoy.dojo.client.*;
+import com.codenjoy.dojo.client.AbstractBoard;
+import com.codenjoy.dojo.client.Direction;
 import com.codenjoy.dojo.services.Point;
 import com.codenjoy.dojo.snake.model.Elements;
 
-import java.util.*;
+import java.util.Arrays;
+import java.util.List;
 
 /**
  * User: oleksandr.baglai
@@ -47,6 +49,9 @@ public class Board extends AbstractBoard<Elements> {
 
     public Direction getSnakeDirection() {
         Point head = getHead();
+        if (head == null) {
+            return null;
+        }
         if (isAt(head.getX(), head.getY(), Elements.HEAD_LEFT)) {
             return Direction.LEFT;
         } else if (isAt(head.getX(), head.getY(), Elements.HEAD_RIGHT)) {
@@ -64,7 +69,11 @@ public class Board extends AbstractBoard<Elements> {
                 Elements.HEAD_DOWN,
                 Elements.HEAD_LEFT,
                 Elements.HEAD_RIGHT);
-        return result.get(0);
+        if (result.isEmpty()) {
+            return null;
+        } else {
+            return result.get(0);
+        }
     }
 
     public List<Point> getBarriers() {
@@ -75,6 +84,10 @@ public class Board extends AbstractBoard<Elements> {
     }
 
     public List<Point> getSnake() {
+        Point head = getHead();
+        if (head == null) {
+            return Arrays.asList();
+        }
         List<Point> result = get(
                 Elements.TAIL_END_DOWN,
                 Elements.TAIL_END_LEFT,
@@ -86,8 +99,12 @@ public class Board extends AbstractBoard<Elements> {
                 Elements.TAIL_LEFT_UP,
                 Elements.TAIL_RIGHT_DOWN,
                 Elements.TAIL_RIGHT_UP);
-        result.add(0, getHead());
+        result.add(0, head);
         return result;
+    }
+
+    public boolean isGameOver() {
+        return getHead() == null;
     }
 
     @Override

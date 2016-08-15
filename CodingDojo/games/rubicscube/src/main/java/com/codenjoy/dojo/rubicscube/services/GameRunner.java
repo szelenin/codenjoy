@@ -36,12 +36,9 @@ import com.codenjoy.dojo.services.settings.SettingsImpl;
 
 import static com.codenjoy.dojo.services.settings.SimpleParameter.v;
 
-public class GameRunner implements GameType {
-
-    private final Settings settings;
+public class GameRunner extends AbstractGameType implements GameType {
 
     public GameRunner() {
-        settings = new SettingsImpl();
         new Scores(0, settings);
     }
 
@@ -51,7 +48,7 @@ public class GameRunner implements GameType {
     }
 
     @Override
-    public Game newGame(EventListener listener, PrinterFactory factory) {
+    public Game newGame(EventListener listener, PrinterFactory factory, String save) {
         RubicsCube rubicsCube = new RubicsCube(new RandomCommand(new RandomDice()));
 
         Game game = new Single(rubicsCube, listener, factory);
@@ -72,11 +69,6 @@ public class GameRunner implements GameType {
     @Override
     public Enum[] getPlots() {
         return Elements.values();
-    }
-
-    @Override
-    public Settings getSettings() {
-        return settings;
     }
 
     @Override

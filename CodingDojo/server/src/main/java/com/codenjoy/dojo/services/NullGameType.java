@@ -44,7 +44,7 @@ public class NullGameType implements GameType {
     }
 
     @Override
-    public Game newGame(EventListener listener, PrinterFactory factory) {
+    public Game newGame(EventListener listener, PrinterFactory factory, String save) {
         throw exception();
     }
 
@@ -75,7 +75,11 @@ public class NullGameType implements GameType {
 
     @Override
     public boolean newAI(String aiName) {
-        // do nothing
-        return false;
+        throw exception();
+    }
+
+    @Override
+    public String getVersion() {
+        throw exception();
     }
 }

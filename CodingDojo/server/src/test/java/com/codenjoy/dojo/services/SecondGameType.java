@@ -36,7 +36,7 @@ public class SecondGameType implements GameType {
     }
 
     @Override
-    public Game newGame(EventListener listener, PrinterFactory factory) {
+    public Game newGame(EventListener listener, PrinterFactory factory, String save) {
         return null;
     }
 
@@ -93,5 +93,10 @@ public class SecondGameType implements GameType {
     @Override
     public boolean newAI(String aiName) {
         return false;
+    }
+
+    @Override
+    public String getVersion() {
+        return null;
     }
 }

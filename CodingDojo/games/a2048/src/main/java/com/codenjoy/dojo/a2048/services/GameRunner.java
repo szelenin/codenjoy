@@ -32,7 +32,7 @@ import com.codenjoy.dojo.services.settings.Settings;
 
 import static com.codenjoy.dojo.services.settings.SimpleParameter.v;
 
-public class GameRunner implements GameType {
+public class GameRunner extends AbstractGameType implements GameType {
 
     private Level level;
     private A2048 game;
@@ -47,7 +47,7 @@ public class GameRunner implements GameType {
     }
 
     @Override
-    public Game newGame(EventListener listener, PrinterFactory factory) {
+    public Game newGame(EventListener listener, PrinterFactory factory, String save) {
         game = new A2048(level, new RandomDice());
 
         Game game = new Single(this.game, listener, factory);

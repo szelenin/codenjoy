@@ -33,11 +33,12 @@
 
     <script src="${ctx}/resources/js/google-analytics.js"></script>
 
-    <script src="${ctx}/resources/js/jquery-1.7.2.js"></script>
+    <script src="${ctx}/resources/js/jquery/jquery-3.1.0.js"></script>
     <script src="${ctx}/resources/js/jcanvas.js"></script>
     <script src="${ctx}/resources/js/jquery.simplemodal-1.4.4.js"></script>
 
     <script src="${ctx}/resources/js/settings.js"></script>
+    <script src="${ctx}/resources/js/board.js"></script>
     <script src="${ctx}/resources/js/canvases.js"></script>
     <script src="${ctx}/resources/js/layout.js"></script>
     <script src="${ctx}/resources/js/donate.js"></script>
@@ -46,8 +47,6 @@
     <script src="${ctx}/resources/js/chat.js"></script>
     <script src="${ctx}/resources/js/hotkeys.js"></script>
     <script src="${ctx}/resources/js/advertisement.js"></script>
-    <!-- TODO этот скрипт должен загрузиться с игрушки -->
-    <script src="${ctx}/resources/${gameName}/js/ace/src/ace.js"></script>
     <script src="${ctx}/resources/js/${gameName}.js"></script>
 
     <script>
@@ -67,10 +66,12 @@
             game.players["${player.name}"] = "${player.name}";
             </c:forEach>
 
+            initBoards(game.players, game.allPlayersScreen,
+                    game.gameName, game.contextPath);
+
             initCanvases(game.players, game.allPlayersScreen,
                         game.singleBoardGame, game.boardSize,
-                        game.gameName, game.contextPath,
-                        game.enablePlayerInfo);
+                        game.gameName, game.enablePlayerInfo);
 
             if (game.enableDonate) {
                 initDonate(game.contextPath);
@@ -91,9 +92,9 @@
                             }
                             function resize() {
                                 var width = leaderboard.width();
-                                var margin = 20;
+                                var margin = 30;
 
-                                $("#glasses").width($(window).width() - width - margin)
+                                $("#glasses").width($(window).width() - width - 3*margin)
                                         .css({ marginLeft: margin, marginTop: margin });
 
                                 leaderboard.width(width).css({ position: "absolute",
@@ -103,10 +104,23 @@
                         });
             }
 
+            var gameInfo = '<h3><a href="' + game.contextPath + 'resources/help/' + game.gameName + '.html" target="_blank">How to play ' + game.gameName + '</a></h3>';
+
             if (game.enableChat) {
                 initChat(game.playerName, game.registered,
                         game.code, game.contextPath,
                         game.gameName);
+
+                if (game.enableInfo) {
+                    $("#chat-container").prepend(gameInfo);
+                }
+            } else {
+                if (game.enableInfo) {
+                    $("#leaderboard").append(gameInfo);
+                }
+            }
+            if (!game.enableInfo) {
+                $("#fork-me").hide(gameInfo);
             }
 
             if (game.enableHotkeys) {
@@ -134,6 +148,7 @@
     </script>
 </head>
 <body style="display:none;">
+    <%@include file="forkMe.jsp"%>
     <div id="board_page">
         <%@include file="canvases.jsp"%>
         <%@include file="chat.jsp"%>

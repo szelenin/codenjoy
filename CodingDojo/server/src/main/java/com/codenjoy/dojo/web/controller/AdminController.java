@@ -34,10 +34,10 @@ import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.ResponseBody;
 
 import javax.servlet.http.HttpServletRequest;
-import java.util.LinkedList;
-import java.util.List;
+import java.util.*;
 
 @Controller
 @RequestMapping("/admin31415")
@@ -64,6 +64,11 @@ public class AdminController {
     public String savePlayerGame(@RequestParam("save") String name, Model model, HttpServletRequest request) {
         saveService.save(name);
         return getAdminPage(model, request);
+    }
+
+    @RequestMapping(params = "gameVersion", method = RequestMethod.GET)
+    public @ResponseBody String getGameVersion(@RequestParam("gameVersion") String gameName) {
+        return gameService.getGame(gameName).getVersion();
     }
 
     @RequestMapping(params = "saveAll", method = RequestMethod.GET)
@@ -198,10 +203,12 @@ public class AdminController {
         String gameName = getGameName(request);
         
         if (gameName == null) {
-            return "redirect:/admin31415?select&" + GAME_NAME + "=sample";
+            return "redirect:/admin31415?select&" + GAME_NAME + "=" +
+                    gameService.getGameNames().iterator().next();
         }
 
-        Settings gameSettings = gameService.getGame(gameName).getSettings();
+        GameType game = gameService.getGame(gameName);
+        Settings gameSettings = game.getSettings();
         List<Parameter<?>> parameters = gameSettings.getParameters();
 
         AdminSettings settings = new AdminSettings();
@@ -213,8 +220,8 @@ public class AdminController {
 
         model.addAttribute("adminSettings", settings);
         model.addAttribute("parameters", parameters);
-        model.addAttribute("games", gameService.getGameNames());
         model.addAttribute(GAME_NAME, gameName);
+        model.addAttribute("gameVersion", game.getVersion());
         model.addAttribute("generateNameMask", "apofig%");
         model.addAttribute("generateCount", "30");
         model.addAttribute("timerPeriod", timerService.getPeriod());
@@ -222,7 +229,7 @@ public class AdminController {
         checkGameStatus(model);
         checkRecordingStatus(model);
         checkRegistrationClosed(model);
-        prepareList(model, settings);
+        prepareList(model, settings, gameName);
         return "admin";
     }
 
@@ -234,8 +241,29 @@ public class AdminController {
         return gameName;
     }
 
-    private void prepareList(Model model, AdminSettings settings) {
+    private void prepareList(Model model, AdminSettings settings, String gameName) {
         List<PlayerInfo> players = saveService.getSaves();
+
+        Set<String> gameNames = new TreeSet<>(gameService.getGameNames());
+        List<String> counts = new LinkedList<>();
+        for (String name : gameNames) {
+            int count = 0;
+            for (PlayerInfo player : players) {
+                if (name.equals(player.getGameName())) {
+                    count++;
+                }
+            }
+            String countPlayers = (count != 0) ? String.format("(%s)", count) : "";
+            counts.add(countPlayers);
+        }
+        model.addAttribute("games", gameNames);
+        model.addAttribute("gamesCount", counts);
+
+
+        for (PlayerInfo player : players) {
+            player.setHidden(!gameName.equals(player.getGameName()));
+        }
+
         if (!players.isEmpty()) {
             model.addAttribute("players", players);
         }

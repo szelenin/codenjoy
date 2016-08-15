@@ -35,15 +35,13 @@ import com.codenjoy.dojo.services.settings.SettingsImpl;
 
 import static com.codenjoy.dojo.services.settings.SimpleParameter.v;
 
-public class GameRunner implements GameType {
+public class GameRunner extends AbstractGameType implements GameType {
 
     public final static boolean SINGLE = true;
-    private final Settings settings;
     private final Level level;
     private Chess game;
 
     public GameRunner() {
-        settings = new SettingsImpl();
         new Scores(0, settings);
         level = new LevelImpl(
                 "tksfaskt" +
@@ -66,7 +64,7 @@ public class GameRunner implements GameType {
     }
 
     @Override
-    public Game newGame(EventListener listener, PrinterFactory factory) {
+    public Game newGame(EventListener listener, PrinterFactory factory, String save) {
         if (!SINGLE || game == null) {
             game = newGame();
         }
@@ -92,18 +90,8 @@ public class GameRunner implements GameType {
     }
 
     @Override
-    public Settings getSettings() {
-        return settings;
-    }
-
-    @Override
     public boolean isSingleBoard() {
         return SINGLE;
     }
 
-    @Override
-    public boolean newAI(String aiName) {
-        // do nothing
-        return false;
-    }
 }

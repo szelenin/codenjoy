@@ -27,16 +27,20 @@ public class PlayerInfo extends Player {
 
     private boolean saved;
     private boolean active;
+    private boolean hidden;
 
     public PlayerInfo() {
         //
     }
 
-    public PlayerInfo(String name, String code, boolean saved) {
+    public PlayerInfo(String name, String code, String url, String gameName, boolean saved) {
         setName(name);
         setCode(code);
+        setCallbackUrl(url);
+        setGameName(gameName);
         this.saved = saved;
         this.active = false;
+        this.hidden = false;
     }
 
     public PlayerInfo(Player player) {
@@ -66,5 +70,13 @@ public class PlayerInfo extends Player {
 
     public void setActive(boolean active) {
         this.active = active;
+    }
+
+    public boolean isHidden() {
+        return hidden;
+    }
+
+    public void setHidden(boolean hidden) {
+        this.hidden = hidden;
     }
 }

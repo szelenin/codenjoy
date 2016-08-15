@@ -27,20 +27,22 @@ import com.codenjoy.dojo.services.*;
 
 public class LocalGameRunner {
 
+    public static int TIMEOUT = 1000;
+
     public static void run(GameType gameType, Solver solver, AbstractBoard board) {
         Game game = gameType.newGame(new EventListener() {
             @Override
             public void event(Object event) {
                 System.out.println("Fire Event: " + event.toString());
             }
-        }, new PrinterFactoryImpl());
+        }, new PrinterFactoryImpl(), null);
 
         game.newGame();
         while (true) {
             String data = game.getBoardAsString();
             board.forString(data);
 
-            System.out.print(board.toString());
+            System.out.println(board.toString());
 
             String answer = solver.get(board);
 
@@ -49,7 +51,7 @@ public class LocalGameRunner {
             new PlayerCommand(game.getJoystick(), answer).execute();
 
             try {
-                Thread.sleep(1000);
+                Thread.sleep(TIMEOUT);
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }

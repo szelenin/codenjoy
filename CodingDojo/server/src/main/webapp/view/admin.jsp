@@ -30,7 +30,7 @@
     <title>Admin page</title>
     <link href="${ctx}/resources/css/bootstrap.css" rel="stylesheet">
     <link href="${ctx}/resources/css/dojo.css" rel="stylesheet">
-    <script src="${ctx}/resources/js/jquery-1.7.2.js"></script>
+    <script src="${ctx}/resources/js/jquery/jquery-3.1.0.js"></script>
     <script src="${ctx}/resources/js/jquery.validate.js"></script>
     <script src="${ctx}/resources/js/validation.js"></script>
     <script src="${ctx}/resources/js/admin.js"></script>
@@ -42,22 +42,33 @@
     </script>
 </head>
 <body>
+    <%@include file="forkMe.jsp"%>
     <div class="page-header">
         <h1>Admin page</h1>
     </div>
 
     <table class="admin-table" id="selectGame">
         <tr>
-            <td>
+            <td style="width:300px;">
+                <b>Please select your game</b>
+            </td>
+        </tr>
+        <tr>
+            <td style="width:300px;">
                 <c:forEach items="${games}" var="game" varStatus="status">
                     <c:if test="${game == gameName}">
                         <b>
                     </c:if>
-                        <a href="${ctx}/admin31415?gameName=${game}&select">${game}</a>
+                        <a href="${ctx}/admin31415?gameName=${game}&select">${game}${gamesCount[status.index]}</a>&nbsp;&nbsp;&nbsp;
                     <c:if test="${game == gameName}">
                         </b>
                     </c:if>
                 </c:forEach>
+            </td>
+        </tr>
+        <tr>
+            <td style="width:300px;">
+                <b>Game version is</b> ${gameVersion}
             </td>
         </tr>
     </table>
@@ -193,8 +204,15 @@
                 </tr>
                 <c:forEach items="${players}" var="player" varStatus="status">
                     <c:choose>
-                        <c:when test="${player.active}">
-                            <tr>
+                        <c:when test="${player.hidden}">
+                            <tr style="display:none;">
+                        </c:when>
+                        <c:otherwise>
+                            <tr style="">
+                        </c:otherwise>
+                    </c:choose>
+                        <c:choose>
+                            <c:when test="${player.active}">
                                 <td><form:input path="players[${status.index}].name"/></td>
                                 <td><form:input path="players[${status.index}].callbackUrl"/></td>
                                 <td><a href="${ctx}/board?gameName=${player.gameName}">${player.gameName}</a></td>
@@ -218,10 +236,8 @@
                                 <td><a href="${ctx}/admin31415?gameOver=${player.name}&gameName=${gameName}">GameOver</a></td>
                                 <td><a href="${ctx}/board/${player.name}?code=${player.code}">ViewGame</a></td>
                                 <td><a href="${ctx}/admin31415?reloadAI=${player.name}&gameName=${gameName}">LoadAI</a></td>
-                            </tr>
-                        </c:when>
-                        <c:otherwise>
-                            <tr>
+                            </c:when>
+                            <c:otherwise>
                                 <td><input class="uneditable-input" value="${player.name}"/></td>
                                 <td><input class="uneditable-input" value="${player.callbackUrl}"/></td>
                                 <td><a href="${ctx}/board?gameName=${player.gameName}">${player.gameName}</a></td>
@@ -243,9 +259,9 @@
                                     </c:otherwise>
                                 </c:choose>
                                 <td>GameOver</td>
-                            </tr>
-                        </c:otherwise>
-                    </c:choose>
+                            </c:otherwise>
+                        </c:choose>
+                    </tr>
                 </c:forEach>
                 <tr>
                     <td>

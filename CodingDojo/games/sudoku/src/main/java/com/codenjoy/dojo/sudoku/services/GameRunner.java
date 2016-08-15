@@ -33,12 +33,9 @@ import com.codenjoy.dojo.sudoku.model.*;
 
 import static com.codenjoy.dojo.services.settings.SimpleParameter.v;
 
-public class GameRunner implements GameType {
-
-    private final Settings settings;
+public class GameRunner extends AbstractGameType implements GameType {
 
     public GameRunner() {
-        settings = new SettingsImpl();
         new Scores(0, settings);
     }
 
@@ -48,7 +45,7 @@ public class GameRunner implements GameType {
     }
 
     @Override
-    public Game newGame(EventListener listener, PrinterFactory factory) {
+    public Game newGame(EventListener listener, PrinterFactory factory, String save) {
         LevelBuilder builder = new LevelBuilder(40, new RandomDice());
         builder.build();
         Level level = new LevelImpl(builder.getBoard(), builder.getMask());
@@ -72,11 +69,6 @@ public class GameRunner implements GameType {
     @Override
     public Enum[] getPlots() {
         return Elements.values();
-    }
-
-    @Override
-    public Settings getSettings() {
-        return settings;
     }
 
     @Override

@@ -31,13 +31,11 @@ import com.codenjoy.dojo.services.settings.Parameter;
 import com.codenjoy.dojo.services.settings.Settings;
 import com.codenjoy.dojo.services.settings.SettingsImpl;
 
-public class GameRunner implements GameType {
+public class GameRunner extends AbstractGameType implements GameType {
 
-    private final Settings settings;
     private final Parameter<Integer> size;
 
     public GameRunner() {
-        settings = new SettingsImpl();
         new Scores(0, settings);
         size = settings.addEditBox("Field size").type(Integer.class).def(30);
     }
@@ -48,7 +46,7 @@ public class GameRunner implements GameType {
     }
 
     @Override
-    public Game newGame(EventListener listener, PrinterFactory factory) {
+    public Game newGame(EventListener listener, PrinterFactory factory, String save) {
         Integer size = settings.getParameter("Field size").type(Integer.class).getValue();
         LevelBuilder builder = new LevelBuilder(new RandomDice(), size);
         Level level = new LevelImpl(builder.getBoard());
@@ -72,11 +70,6 @@ public class GameRunner implements GameType {
     @Override
     public Enum[] getPlots() {
         return Elements.values();
-    }
-
-    @Override
-    public Settings getSettings() {
-        return settings;
     }
 
     @Override

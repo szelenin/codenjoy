@@ -29,7 +29,7 @@ public class LocalGameRunner {
 
     public static int TIMEOUT = 1000;
 
-    public static void run(GameType gameType, Solver solver, AbstractBoard board) {
+    public static void run(GameType gameType, Solver solver, ClientBoard board) {
         Game game = gameType.newGame(new EventListener() {
             @Override
             public void event(Object event) {
@@ -39,8 +39,8 @@ public class LocalGameRunner {
 
         game.newGame();
         while (true) {
-            String data = game.getBoardAsString();
-            board.forString(data);
+            Object data = game.getBoardAsString();
+            board.forString((String)data);
 
             System.out.println(board.toString());
 

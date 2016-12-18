@@ -21,68 +21,199 @@
  */
 var currentBoardSize = null;
 
-function initCanvases(players, allPlayersScreen, singleBoardGame, boardSize, gameName, enablePlayerInfo){
-    var canvases = new Object();
-    var infoPools = new Object();
+function initCanvases(contextPath, players, allPlayersScreen, singleBoardGame, boardSize, gameName, enablePlayerInfo, sprites){
+    var canvases = {};
+    var infoPools = {};
     currentBoardSize = boardSize;
-
-    if (!enablePlayerInfo) {
-        $(".player_info").hide();
-    }
+    var plots = {};
+    var plotsUrls = {};
+    loadCanvasesData();
+    var reloading = false;
 
     function toId(email) {
         return email.replace(/[@.]/gi, "_");
     }
 
-    for (var i in players) {
-        var player = players[i];
-        canvases[player] = createCanvas(toId(player));
-        infoPools[player] = [];
+    function goToHomePage() {
+        window.location.href = contextPath;
     }
 
-    function decode(gameName, color) {
-        return plots[color];
-    }
+    function reloadCanvasesData() {
+        reloading = true;
 
-    function drawBoardForPlayer(playerName, gameName, board, coordinates) {
-        var playerCanvas = canvases[playerName];
-        var drawLayer = function(layer){
-            var x = 0;
-            var y = boardSize - 1;
-            for (var index in layer) {
-                var color = layer[index];
-                playerCanvas.drawPlot(decode(gameName, color), x, y);
-                x++;
-                if (x == boardSize) {
-                   x = 0;
-                   y--;
+        loadPlayers(function(newPlayers) {
+            var remove = [];
+            var create = [];
+            var playerNames = getNames(players);
+            var newPlayerNames = getNames(newPlayers);
+            newPlayers.forEach(function (newPlayer) {
+                if ($.inArray(newPlayer.name, playerNames) == -1) {
+                    create.push(newPlayer);
                 }
+            });
+            players.forEach(function (player) {
+                if ($.inArray(player.name, newPlayerNames) == -1) {
+                    remove.push(player);
+                }
+            });
+
+            players = newPlayers;
+
+            removeHtml(remove);
+            removeCanvases(remove);
+
+            buildHtml(create);
+            buildCanvases(create);
+
+            if (players.length == 0) {
+                goToHomePage();
+            }
+            reloading = false;
+        });
+    }
+
+    function loadCanvasesData() {
+        loadData('rest/sprites/alphabet', function(alphabet) {
+            loadData('rest/sprites/' + gameName, function(elements) {
+                for (var index in elements) {
+                    var char = alphabet[index];
+                    var color = elements[index];
+                    plots[char] = color;
+                    var subFolder = (!!sprites) ? sprites + '/' : '';
+                    plotsUrls[color] = contextPath + 'resources/sprite/' + gameName + '/' + subFolder + color + '.png';
+                }
+
+                buildHtml(players);
+                buildCanvases(players);
+
+                $('body').on('board-updated', function(events, data) {
+                    if (!reloading) {
+                        drawUsersCanvas(data);
+                    }
+                });
+            });
+        });
+    }
+
+    function removeHtml(playersList) {
+        playersList.forEach(function (player) {
+            $('#div_' + toId(player.name)).remove();
+        });
+    }
+
+    function buildHtml(playersList) {
+        var templateData = [];
+        playersList.forEach(function (player) {
+            var playerName = player.name;
+            var id = toId(playerName);
+            var name = playerName.split('@')[0];
+            var visible = (allPlayersScreen || !enablePlayerInfo) ? 'none' : '';
+            templateData.push({name : name, id : id, visible : visible })
+        });
+        $('#players_container script').tmpl(templateData).appendTo('#players_container');
+        if (!enablePlayerInfo) {
+            $(".player_info").hide();
+        }
+    }
+
+    function removeCanvases(playersList) {
+        playersList.forEach(function (player) {
+            delete canvases[player.name];
+            delete infoPools[player.name];
+        });
+    }
+
+    function buildCanvases(playersList) {
+        playersList.forEach(function (player) {
+            canvases[player.name] = createCanvas(toId(player.name));
+            infoPools[player.name] = [];
+        });
+    }
+
+    function decode(char) {
+        return plots[char];
+    }
+
+    function plotsContains(color) {
+        for (var char in plots) {
+            if (plots[char] == color) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    function drawBoardForPlayer(playerName, gameName, board, heroesData) {
+        var playerCanvas = canvases[playerName];
+
+        var drawLayers = function(layers){
+            var isDrawByOrder = true;
+
+            var drawChar = function(plotIndex) {
+                var x = 0;
+                var y = boardSize - 1;
+                for (var charIndex in layers[0]) {
+                    for (var layerIndex in layers) {
+                        var layer = layers[layerIndex];
+                        var color = layer[charIndex];
+                        if (!isDrawByOrder || plotIndex == color) {
+                            playerCanvas.drawPlot(decode(color), x, y);
+                        }
+                    }
+                    x++;
+                    if (x == boardSize) {
+                       x = 0;
+                       y--;
+                    }
+                }
+            }
+
+            if (isDrawByOrder) {
+                for (var char in plots) {
+                    var plot = plots[char];
+                    drawChar(char);
+                }
+            } else {
+                drawChar();
+            }
+        }
+
+        var drawBackground = function(name) {
+            if (plotsContains(name)) {
+                var x = boardSize / 2 - 0.5;
+                playerCanvas.drawPlot(name, x, 0);
             }
         }
 
         playerCanvas.clear();
-        if ($('#_background').length) {
-            var x = boardSize / 2 - 0.5;
-            playerCanvas.drawPlot('_background', x, 0);
-        }
+
+        drawBackground('background');
+
         try {
-            var json = $.parseJSON(board);
-            $.each(json.layers, function(index, layer) {
-                drawLayer(layer);
-            });
+            drawLayers(board.layers);
         } catch (err) {
-            drawLayer(board);
-        }
-        if ($('#_fog').length) {
-            var x = boardSize / 2 - 0.5;
-            playerCanvas.drawPlot('_fog', x, 0);
+            drawLayers([board]);
         }
 
-        if (singleBoardGame) {
-            $.each(coordinates, function(name, pt) {
-                playerCanvas.drawPlayerName(name, pt);
+        if (singleBoardGame || !!board.showName) {
+            var currentPoint = null;
+            $.each(heroesData, function(name, heroData) {
+                var point = heroData.coordinate;
+                if (!!board.offset) {
+                    point.x -= board.offset.x;
+                    point.y -= board.offset.y;
+                }
+                if (playerName == name) {
+                    currentPoint = point;
+                }
+                if (!board.onlyMyName && !!heroData.singleBoardGame) {
+                    playerCanvas.drawPlayerName(name, point);
+                }
             });
+            playerCanvas.drawPlayerName(playerName, currentPoint);
         }
+
+        drawBackground('fog');
     }
 
     function calculateTextSize(text) {
@@ -134,13 +265,13 @@ function initCanvases(players, allPlayersScreen, singleBoardGame, boardSize, gam
     }
 
     function createCanvas(canvasName) {
-        var canvasImages = $('#systemCanvas img');
         var canvas = $("#" + canvasName);
 
         var plotSize = 0;
         var canvasSize = 0;
-        var calcSize = function() {
-            plotSize = canvasImages[0].width;
+        var firstSprite = null;
+        var calcSize = function(image) {
+            plotSize = image.width;
             canvasSize = plotSize * boardSize;
             if (canvas[0].width != canvasSize || canvas[0].height != canvasSize) {
                 canvas[0].width = canvasSize;
@@ -148,21 +279,23 @@ function initCanvases(players, allPlayersScreen, singleBoardGame, boardSize, gam
             }
         }
 
-        var plots = {};
-        $.each(canvasImages, function(index, plot) {
-            var color = plot.id;
+        var images = {};
+        for (var color in plotsUrls) {
             var image = new Image();
             image.onload = function() {
-                if (plotSize == 0) {
-                    calcSize();
+                if (this == firstSprite) {
+                    calcSize(this);
                 }
             }
-            image.src = plot.src;
-            plots[color] = image;
-        });
+            image.src = plotsUrls[color];
+            images[color] = image;
+            if (!firstSprite) {
+                firstSprite = image;
+            }
+        }
 
         var drawPlot = function(color, x, y) {
-            var image = plots[color];
+            var image = images[color];
             var ctx = canvas[0].getContext("2d");
             ctx.drawImage(
                 image,
@@ -177,14 +310,34 @@ function initCanvases(players, allPlayersScreen, singleBoardGame, boardSize, gam
             if (pt.x == -1 || pt.y == -1) return;
 
             var ctx = canvas[0].getContext("2d");
-            ctx.font = "15px 'Verdana, sans-serif'";
-            ctx.fillStyle = "#0FF";
-            ctx.textAlign = "left";
-            ctx.shadowColor = "#000";
-            ctx.shadowOffsetX = 0;
-            ctx.shadowOffsetY = 0;
-            ctx.shadowBlur = 7;
-            ctx.fillText(name, (pt.x + 1) * plotSize, (boardSize - pt.y - 1) * plotSize - 5);
+            if (!game.heroInfo) {
+                game.heroInfo = {
+                    font: "15px 'Verdana, sans-serif'",
+                    fillStyle: "#0FF",
+                    textAlign: "left",
+                    shadowColor: "#000",
+                    shadowOffsetX: 0,
+                    shadowOffsetY: 0,
+                    shadowBlur: 7
+                }
+            }
+            ctx.font = game.heroInfo.font;
+            ctx.fillStyle =  game.heroInfo.fillStyle;
+            ctx.textAlign = game.heroInfo.textAlign;
+            ctx.shadowColor = game.heroInfo.shadowColor;
+            ctx.shadowOffsetX = game.heroInfo.shadowOffsetX;
+            ctx.shadowOffsetY = game.heroInfo.shadowOffsetY;
+            ctx.shadowBlur = game.heroInfo.shadowBlur;
+
+            var x = (pt.x + 1) * plotSize;
+            var y = (boardSize - pt.y - 1) * plotSize - 5;
+            if (!!game.heroInfo.dx && !!game.heroInfo.dy) {
+                x += game.heroInfo.dx;
+                y += game.heroInfo.dy;
+            }
+            for (var i = 0; i < 10; i++) {
+                ctx.fillText(name, x, y);
+            }
             ctx.shadowBlur = 0;
         }
 
@@ -213,9 +366,17 @@ function initCanvases(players, allPlayersScreen, singleBoardGame, boardSize, gam
         return Object.keys(data).length == 0;
     }
 
+    function getNames(playerList) {
+        var result = [];
+        playerList.forEach(function (player) {
+            result.push(player.name);
+        });
+        return result;
+    }
+
     function isPlayersListChanged(data) {
         var newPlayers = Object.keys(data);
-        var oldPlayers = Object.keys(players);
+        var oldPlayers = getNames(players);
 
         if (newPlayers.length != oldPlayers.length) {
             return true;
@@ -238,8 +399,13 @@ function initCanvases(players, allPlayersScreen, singleBoardGame, boardSize, gam
         }
         $("#showdata").text('');
 
-        if (allPlayersScreen && isPlayersListChanged(data) || isPlayerListEmpty(data)) {
-            window.location.reload();
+        if (isPlayerListEmpty(data)) {
+            goToHomePage();
+            return;
+        }
+
+        if (allPlayersScreen && isPlayersListChanged(data)) {
+            reloadCanvasesData();
             return;
         }
 
@@ -247,7 +413,7 @@ function initCanvases(players, allPlayersScreen, singleBoardGame, boardSize, gam
             $.each(data, drawUserCanvas);
         } else {
             for (var i in players) {
-                var player = players[i];
+                var player = players[i].name;
                 drawUserCanvas(player, data[player]);
             }
         }
@@ -255,19 +421,15 @@ function initCanvases(players, allPlayersScreen, singleBoardGame, boardSize, gam
 
     function drawUserCanvas(playerName, data) {
         if (currentBoardSize != data.boardSize) {    // TODO так себе решение... Почему у разных юзеров передается размер добры а не всем сразу?
-            window.location.reload();
+            reloadCanvasesData();
         }
 
-        drawBoardForPlayer(playerName, data.gameName, data.board, $.parseJSON(data.coordinates));
+        drawBoardForPlayer(playerName, data.gameName, data.board, data.heroesData);
         $("#score_" + toId(playerName)).text(data.score);
         showScoreInformation(playerName, data.info);
         if (!allPlayersScreen) {
             $("#level_" + toId(playerName)).text(data.level);
         }
     }
-
-    $('body').bind("board-updated", function(events, data) {
-        drawUsersCanvas(data);
-    });
 
 }

@@ -31,13 +31,18 @@
     <link href="${ctx}/resources/css/bootstrap.css" rel="stylesheet">
     <link href="${ctx}/resources/css/dojo.css" rel="stylesheet">
     <script src="${ctx}/resources/js/jquery/jquery-3.1.0.js"></script>
-    <script src="${ctx}/resources/js/jquery.validate.js"></script>
+    <script src="${ctx}/resources/js/jquery/jquery.validate.js"></script>
+
+    <script src="${ctx}/resources/js/ajax-loader.js"></script>
     <script src="${ctx}/resources/js/validation.js"></script>
     <script src="${ctx}/resources/js/admin.js"></script>
     <script src="${ctx}/resources/js/hotkeys.js"></script>
     <script>
         $(document).ready(function () {
-            initHotkeys('${gameName}', '${ctx}/');
+            game.contextPath = '${ctx}';
+            game.gameName = '${gameName}';
+
+            initHotkeys(game.gameName, game.contextPath);
         });
     </script>
 </head>
@@ -215,7 +220,7 @@
                             <c:when test="${player.active}">
                                 <td><form:input path="players[${status.index}].name"/></td>
                                 <td><form:input path="players[${status.index}].callbackUrl"/></td>
-                                <td><a href="${ctx}/board?gameName=${player.gameName}">${player.gameName}</a></td>
+                                <td><a href="${ctx}/board/game/${player.gameName}">${player.gameName}</a></td>
                                 <td><a href="${ctx}/admin31415?save=${player.name}&gameName=${gameName}">Save</a></td>
                                 <c:choose>
                                     <c:when test="${player.saved}">
@@ -234,13 +239,13 @@
                                     </c:otherwise>
                                 </c:choose>
                                 <td><a href="${ctx}/admin31415?gameOver=${player.name}&gameName=${gameName}">GameOver</a></td>
-                                <td><a href="${ctx}/board/${player.name}?code=${player.code}">ViewGame</a></td>
+                                <td><a href="${ctx}/board/player/${player.name}?code=${player.code}">ViewGame</a></td>
                                 <td><a href="${ctx}/admin31415?reloadAI=${player.name}&gameName=${gameName}">LoadAI</a></td>
                             </c:when>
                             <c:otherwise>
                                 <td><input class="uneditable-input" value="${player.name}"/></td>
                                 <td><input class="uneditable-input" value="${player.callbackUrl}"/></td>
-                                <td><a href="${ctx}/board?gameName=${player.gameName}">${player.gameName}</a></td>
+                                <td><a href="${ctx}/board/game/${player.gameName}">${player.gameName}</a></td>
                                 <td>Save</td>
                                 <c:choose>
                                     <c:when test="${player.saved}">

@@ -19,7 +19,7 @@
  * <http://www.gnu.org/licenses/gpl-3.0.html>.
  * #L%
  */
-var game = {};
+var game = game || {};
 game.enableDonate = false;
 game.enableJoystick = false;
 game.enableAlways = false;
@@ -30,4 +30,5 @@ game.enableInfo = true;
 game.enableHotkeys = true;
 game.enableAdvertisement = false;
 game.showBody = true;
-
+game.sprites = null;
+game.heroInfo= null;

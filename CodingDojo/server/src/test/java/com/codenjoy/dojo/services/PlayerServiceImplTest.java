@@ -25,12 +25,15 @@ package com.codenjoy.dojo.services;
 
 import com.codenjoy.dojo.services.chat.ChatService;
 import com.codenjoy.dojo.services.dao.ActionLogger;
+import com.codenjoy.dojo.services.hero.GameMode;
+import com.codenjoy.dojo.services.hero.HeroData;
 import com.codenjoy.dojo.services.mocks.*;
 import com.codenjoy.dojo.services.playerdata.ChatLog;
 import com.codenjoy.dojo.services.playerdata.PlayerData;
 import com.codenjoy.dojo.transport.screen.ScreenRecipient;
 import com.codenjoy.dojo.transport.screen.ScreenSender;
 import org.fest.reflect.core.Reflection;
+import org.json.JSONObject;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -124,7 +127,7 @@ public class PlayerServiceImplTest {
 
         game = mock(Game.class);
         when(game.getJoystick()).thenReturn(joystick);
-        when(game.getHero()).thenReturn(pt(1, 2), pt(3, 4), pt(5, 6), pt(7, 8));
+        when(game.getHero()).thenReturn(heroData(1, 2), heroData(3, 4), heroData(5, 6), heroData(7, 8));
         when(game.isGameOver()).thenReturn(false);
 
         gameType = mock(GameType.class);
@@ -143,6 +146,10 @@ public class PlayerServiceImplTest {
         playerGames.clear();
         Mockito.reset(playerController, screenSender, actionLogger);
         playerService.openRegistration();
+    }
+
+    private HeroData heroData(int x, int y) {
+        return GameMode.heroOnTheirOwnBoard(pt(x, y));
     }
 
     enum Elements {
@@ -220,6 +227,17 @@ public class PlayerServiceImplTest {
     }
 
     @Test
+    public void shouldSendPlayerBoardFromJsonBoard() throws IOException {
+        Player vasia = createPlayer(VASYA);
+        when(game.getBoardAsString()).thenReturn(new JSONObject("{'layers':['1234','4321']}"));
+
+        playerService.tick();
+
+        assertSentToPlayers(vasia);
+        assertEquals("{\"layers\":[\"ABCD\",\"DCBA\"]}", getBoardFor(vasia));
+    }
+
+    @Test
     public void shouldRequestControlFromAllPlayers() throws IOException {
         Player vasia = createPlayer(VASYA);
         Player petia = createPlayer(PETYA);
@@ -265,13 +283,17 @@ public class PlayerServiceImplTest {
         Map<ScreenRecipient, Object> data = screenSendCaptor.getValue();
 
         Map<String, String> expected = new HashMap<String, String>();
+        String heroesData = "HeroesData:'{\"petya@mail.com\":{\"coordinate\":{\"y\":4,\"x\":3},\"singleBoardGame\":false},\"vasya@mail.com\":{\"coordinate\":{\"y\":2,\"x\":1},\"singleBoardGame\":false}}'";
+        String scores = "Scores:'{\"petya@mail.com\":234,\"vasya@mail.com\":123}'";
         expected.put(VASYA, "PlayerData[BoardSize:15, " +
                 "Board:'ABCD', GameName:'game', Score:123, MaxLength:10, Length:8, CurrentLevel:1, Info:'', " +
-                "Scores:'{\"petya@mail.com\":234,\"vasya@mail.com\":123}', Coordinates:'{\"petya@mail.com\":{\"y\":4,\"x\":3},\"vasya@mail.com\":{\"y\":2,\"x\":1}}']");
+                scores + ", " +
+                heroesData + "]");
 
         expected.put(PETYA, "PlayerData[BoardSize:15, " +
                 "Board:'DCBA', GameName:'game', Score:234, MaxLength:11, Length:9, CurrentLevel:1, Info:'', " +
-                "Scores:'{\"petya@mail.com\":234,\"vasya@mail.com\":123}', Coordinates:'{\"petya@mail.com\":{\"y\":8,\"x\":7},\"vasya@mail.com\":{\"y\":6,\"x\":5}}']");
+                scores + ", " +
+                heroesData + "]");
 
         expected.put(PlayerServiceImpl.CHAT, "ChatLog:chat");
 
@@ -391,7 +413,7 @@ public class PlayerServiceImplTest {
 
     private String getBoardFor(Player vasya) {
         Map<Player, PlayerData> value = getScreenSendCaptorValues();
-        return value.get(vasya).getBoard();
+        return value.get(vasya).getBoard().toString();
     }
 
     private void assertSentToPlayers(Player ... players) {
@@ -898,7 +920,7 @@ public class PlayerServiceImplTest {
     private void setup(Game game) {
         when(game.getBoardAsString()).thenReturn("123");
         when(game.isGameOver()).thenReturn(false);
-        when(game.getHero()).thenReturn(pt(0, 0));
+        when(game.getHero()).thenReturn(heroData(0, 0));
     }
 
     @Test

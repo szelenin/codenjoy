@@ -95,7 +95,7 @@ public class ActionLogger {
                             break;
                         }
 
-                        stmt.setTime(1, new Time(data.getTime()));
+                        stmt.setString(1, JDBCTimeUtils.toString(new Date(data.getTime())));
                         stmt.setString(2, data.getPlayerName());
                         stmt.setString(3, data.getGameType());
                         stmt.setInt(4, data.getScore());
@@ -112,7 +112,7 @@ public class ActionLogger {
     }
 
     public void log(PlayerGames playerGames) {
-        if (!active) return;
+        if (!active || playerGames.size() == 0) return;
 
         long tick = System.currentTimeMillis();
         for (PlayerGame playerGame : playerGames) {
@@ -121,7 +121,7 @@ public class ActionLogger {
                     player.getName(),
                     player.getGameName(),
                     player.getScore(),
-                    playerGame.getGame().getBoardAsString()));
+                    playerGame.getGame().getBoardAsString().toString()));
         }
 
         if (count++ % ticksPerSave == 0) {

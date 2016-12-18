@@ -58,7 +58,6 @@ function initLeadersTable(contextPath, playerName, code, onSetup, onDrawItem){
             $("#table-logs-body").empty();
             return;
         }
-        data = $.parseJSON(data);
 
         data = sortByScore(data);
 
@@ -83,7 +82,7 @@ function initLeadersTable(contextPath, playerName, code, onSetup, onDrawItem){
             var you = (name == playerName)?"=> ":"";
 
             count++;
-            var link = contextPath + 'board/' + email + ((!!code)?('?code=' + code):"");
+            var link = contextPath + 'board/player/' + email + ((!!code)?('?code=' + code):"");
             tbody += onDrawItem(count, you, link, name, score);
 
         });
@@ -92,8 +91,19 @@ function initLeadersTable(contextPath, playerName, code, onSetup, onDrawItem){
         leaderboard.trigger($.Event('resize'));
     }
 
+    function isEmpty(map) {
+       for (var key in map) {
+          if (map.hasOwnProperty(key)) {
+             return false;
+          }
+       }
+       return true;
+    }
+
     $('body').bind("board-updated", function(event, data) {
-        drawLeaderTable(data);
+        if (!isEmpty(data)) {
+            drawLeaderTable(data);
+        }
     });
 
     if (!!onSetup) {

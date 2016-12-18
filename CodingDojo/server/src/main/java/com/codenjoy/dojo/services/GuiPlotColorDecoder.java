@@ -32,7 +32,7 @@ import java.util.List;
 
 public class GuiPlotColorDecoder {
 
-    public static String GUI = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789abcdefghijklmnopqrstuvwxyz";
+    public static String GUI = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
     private Object[] values;
 
     public GuiPlotColorDecoder(Object[] values) {
@@ -57,12 +57,24 @@ public class GuiPlotColorDecoder {
         throw new IllegalArgumentException("Not enum symbol '" + consoleChar + "'");
     }
 
-    public String encode(String board) {
-        board = oneLine(board);
-        if (board.startsWith("{\"")) {
+    public String encodeForClient(Object board) {
+        return board.toString().replaceAll("\n", "");
+    }
+
+    public Object encodeForBrowser(Object board) {
+        if (board instanceof String) {
+            return encodeBoard((String)board);
+        }
+
+        if (!(board instanceof JSONObject)) {
+            throw new IllegalArgumentException("You can use only String or JSONObject as board");
+        }
+
+        JSONObject object = (JSONObject)board;
+
+        String key = "layers";
+        if (object.has(key)) {
             List<String> encodedLayers = new LinkedList<>();
-            JSONObject object = new JSONObject(board);
-            String key = "layers";
             JSONArray layers = object.getJSONArray(key);
             for (int i = 0; i < layers.length(); i++) {
                 String layer = layers.getString(i);
@@ -71,22 +83,17 @@ public class GuiPlotColorDecoder {
             }
             object.remove(key);
             object.put(key, new JSONArray(encodedLayers));
-            return object.toString();
-        } else {
-            return encodeBoard(board);
+            return object;
         }
+
+        return object;
     }
 
     private String encodeBoard(String board) {
-        char[] chars = board.toCharArray();
+        char[] chars = board.replaceAll("\n", "").toCharArray();
         for (int index = 0; index < chars.length; index++) {
             chars[index] = getGuiChar(chars[index]);
         }
         return String.copyValueOf(chars);
     }
-
-    private String oneLine(String string) {
-        return string.replace("\n", "");
-    }
-
 }

@@ -145,7 +145,7 @@ public class PlayerGames implements Iterable<PlayerGame>, Tickable {
 
 //        removeNotActivePlayers();
 
-        for (PlayerGame playerGame : playerGames) {
+        for (final PlayerGame playerGame : playerGames) {
             final Game game = playerGame.getGame();
             if (game.isGameOver()) {
                 quietTick(new Tickable() {

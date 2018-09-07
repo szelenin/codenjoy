@@ -2,7 +2,7 @@
  * #%L
  * Codenjoy - it's a dojo-like platform from developers to developers.
  * %%
- * Copyright (C) 2016 Codenjoy
+ * Copyright (C) 2018 Codenjoy
  * %%
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as
@@ -24,11 +24,34 @@ game.enableDonate = false;
 game.enableJoystick = false;
 game.enableAlways = false;
 game.enablePlayerInfo = true;
+game.enablePlayerInfoLevel = true;
 game.enableLeadersTable = true;
-game.enableChat = false;
 game.enableInfo = true;
 game.enableHotkeys = true;
 game.enableAdvertisement = false;
 game.showBody = true;
 game.sprites = null;
-game.heroInfo= null;
+game.heroInfo = null;
+
+game.debug = false;
+game.debugger = function() {
+    debugger;
+}
+
+var getSettings = function(name) {
+    var value = $('#settings').attr(name);
+
+    if (typeof(value) === 'undefined') {
+        return null
+    }
+
+    if (value === '') {
+        return null;
+    }
+
+    if (value === 'true' || value === 'false'){
+        return (value === 'true');
+    }
+
+    return value;
+}

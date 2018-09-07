@@ -4,7 +4,7 @@ package com.codenjoy.dojo.services;
  * #%L
  * Codenjoy - it's a dojo-like platform from developers to developers.
  * %%
- * Copyright (C) 2016 Codenjoy
+ * Copyright (C) 2018 Codenjoy
  * %%
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as
@@ -34,9 +34,9 @@ public class BoardLog {
     private String playerName;
     private String board;
     private String gameType;
-    private int score;
+    private Object score;
 
-    public BoardLog(long time, String playerName, String gameType, int score, String board) {
+    public BoardLog(long time, String playerName, String gameType, Object score, String board) {
         this.time = time;
         this.playerName = playerName;
         this.gameType = gameType;
@@ -74,7 +74,7 @@ public class BoardLog {
                 '}';
     }
 
-    public int getScore() {
+    public Object getScore() {
         return score;
     }
 

@@ -4,7 +4,7 @@ package com.codenjoy.dojo.kata.model.levels;
  * #%L
  * Codenjoy - it's a dojo-like platform from developers to developers.
  * %%
- * Copyright (C) 2016 - 2017 Codenjoy
+ * Copyright (C) 2018 Codenjoy
  * %%
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as
@@ -25,14 +25,12 @@ package com.codenjoy.dojo.kata.model.levels;
 
 import com.codenjoy.dojo.kata.model.Elements;
 
-/**
- * Created by indigo on 2017-03-30.
- */
 public class WaitLevel extends NullLevel implements Level {
     
     @Override
     public String description() {
         return "Wait for next level. Please send " +
-                "'message(\'" + Elements.START_NEXT_LEVEL + "\')' command.";
+                "'message(\'" + Elements.START_NEXT_LEVEL +
+                "\')' command.";
     }
 }

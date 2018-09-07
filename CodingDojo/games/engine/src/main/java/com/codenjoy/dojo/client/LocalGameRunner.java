@@ -4,7 +4,7 @@ package com.codenjoy.dojo.client;
  * #%L
  * Codenjoy - it's a dojo-like platform from developers to developers.
  * %%
- * Copyright (C) 2016 Codenjoy
+ * Copyright (C) 2018 Codenjoy
  * %%
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as
@@ -23,45 +23,114 @@ package com.codenjoy.dojo.client;
  */
 
 
-import com.codenjoy.dojo.services.*;
+import com.codenjoy.dojo.services.Dice;
+import com.codenjoy.dojo.services.Game;
+import com.codenjoy.dojo.services.GameType;
+import com.codenjoy.dojo.services.PlayerCommand;
+import com.codenjoy.dojo.services.multiplayer.GameField;
+import com.codenjoy.dojo.services.multiplayer.GamePlayer;
+import com.codenjoy.dojo.services.multiplayer.Single;
+import com.codenjoy.dojo.services.printer.PrinterFactory;
 
-public class LocalGameRunner {
+import java.util.Arrays;
+import java.util.List;
+import java.util.function.Consumer;
 
-    public static int TIMEOUT = 1000;
+import static java.util.stream.Collectors.toList;
+
+public class LocalGameRunner { // TODO test me
+
+    public static int timeout = 1000;
+    public static Consumer<String> out = System.out::println;
+    public static Integer countIterations = null;
 
     public static void run(GameType gameType, Solver solver, ClientBoard board) {
-        Game game = gameType.newGame(new EventListener() {
-            @Override
-            public void event(Object event) {
-                System.out.println("Fire Event: " + event.toString());
-            }
-        }, new PrinterFactoryImpl(), null);
+        run(gameType, Arrays.asList(solver), Arrays.asList(board));
+    }
 
-        game.newGame();
-        while (true) {
-            Object data = game.getBoardAsString();
-            board.forString(data.toString()); 
+    public static void run(GameType gameType,
+                           List<Solver> solver,
+                           List<ClientBoard> board)
+    {
+        GameField game = gameType.createGame();
 
-            System.out.println(board.toString());
+        List<Game> games = solver.stream()
+                .map(slv -> createGame(gameType, game))
+                .collect(toList());
 
-            String answer = solver.get(board);
-
-            System.out.println("Answer: " + answer);
-
-            new PlayerCommand(game.getJoystick(), answer).execute();
-
-            try {
-                Thread.sleep(TIMEOUT);
-            } catch (InterruptedException e) {
-                e.printStackTrace();
+        Integer count = countIterations;
+        while (count == null || (count != null && count-- > 0)) {
+            for (int index = 0; index < games.size(); index++) {
+                processNextTick(index, solver.get(index),
+                        board.get(index),
+                        games.get(index));
             }
 
             game.tick();
-            if (game.isGameOver()) {
-                game.newGame();
-            }
-            System.out.println("------------------------------------------------------------------------------------");
+            for (int index = 0; index < games.size(); index++) {
+                Game single = games.get(index);
+                if (single.isGameOver()) {
+                    out.accept(player(index, "PLAYER_GAME_OVER -> START_NEW_GAME"));
+                    single.newGame();
+                }
+            };
+
+            out.accept("------------------------------------------");
         }
+    }
+
+    private static void processNextTick(int index, Solver solver, ClientBoard board, Game game) {
+        Object data = game.getBoardAsString();
+        board.forString(data.toString());
+
+        out.accept(player(index, board.toString()));
+
+        String answer = solver.get(board);
+
+        out.accept(player(index, "Answer: " + answer));
+
+        new PlayerCommand(game.getJoystick(), answer).execute();
+
+        if (timeout > 0) {
+            try {
+                Thread.sleep(timeout);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+        }
+    }
+
+    public static Dice getDice(int... numbers) {
+        int[] index = {0};
+        return (n) -> {
+            int next = numbers[index[0]];
+            out.accept("DICE:" + next);
+            if (next >= n) {
+                next = next % n;
+                out.accept("DICE_CORRECTED < " + n + " :" + next);
+            }
+            if (++index[0] == numbers.length) {
+                index[0]--; // повторять последнее число если мы в конце массива
+            }
+            return next;
+        };
+    }
+
+    private static String player(int index, String message) {
+        String preffix = (index + 1) + ":";
+        return preffix + message.replaceAll("\\n", "\n" + preffix);
+    }
+
+    private static Game createGame(GameType gameType, GameField field) {
+        GamePlayer gamePlayer = gameType.createPlayer(
+                event -> out.accept("Fire Event: " + event.toString()),
+                null, null);
+        PrinterFactory factory = gameType.getPrinterFactory();
+
+        Game game = new Single(gamePlayer, factory);
+        game.on(field);
+        game.newGame();
+        return game;
     }
 
 }

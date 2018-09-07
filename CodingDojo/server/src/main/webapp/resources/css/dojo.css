@@ -2,7 +2,7 @@
  * #%L
  * Codenjoy - it's a dojo-like platform from developers to developers.
  * %%
- * Copyright (C) 2016 Codenjoy
+ * Copyright (C) 2018 Codenjoy
  * %%
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as
@@ -19,11 +19,17 @@
  * <http://www.gnu.org/licenses/gpl-3.0.html>.
  * #L%
  */
+
+#settings {
+    display: none;
+}
+
 .score-info {
     color:yellow;
     text-shadow: 6px 6px 10px black, 4px 4px 4px red;
     font-size:90px;
     display:none;
+    line-height:0.8;
 }
 
 .width-calculator{
@@ -59,7 +65,17 @@ label.error {
     margin:10px;
 }
 
-#adminSettings input {
+#adminSettings input[type="text"] {
+    width:150px;
+    height:24px;
+}
+
+#adminSettings input[type="checkbox"] {
+    width:19px;
+    height:24px;
+}
+
+#adminSettings select {
     width:150px;
     height:24px;
 }
@@ -79,13 +95,17 @@ label.error {
     height: 20px;
 }
 
-#chat-container {
-    left: 850px;
-    width: 450px;
+#leaderboard {
+    width: 500px;
+    float: right;
+    padding-right: 75px;
+    padding-top: 25px;
 }
 
-#leaderboard {
-    width: 450px;
+#glasses {
+    width: calc(100% - 500px);
+    float: left;
+    padding-left: 20px;
 }
 
 #want-donate {
@@ -102,6 +122,9 @@ label.error {
 
 #donate {
     text-align: center;
+    position: absolute;
+    left: 300px;
+    top: 20px;
 }
 
 #donate-container {
@@ -118,13 +141,14 @@ label.error {
 }
 
 #advertisement {
-    text-align:center;
-    width:250px;
-    margin-left: 104px;
-    margin-bottom: 13px;
-    margin-top: -26px;
+    width:500px;
+}
+
+#advertisement img {
+    width: 200px;
 }
 
 .player-canvas {
     float: left;
 }
+

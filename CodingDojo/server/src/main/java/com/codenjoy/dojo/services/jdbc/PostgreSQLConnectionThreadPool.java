@@ -4,7 +4,7 @@ package com.codenjoy.dojo.services.jdbc;
  * #%L
  * Codenjoy - it's a dojo-like platform from developers to developers.
  * %%
- * Copyright (C) 2016 Codenjoy
+ * Copyright (C) 2018 Codenjoy
  * %%
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as
@@ -31,16 +31,13 @@ public class PostgreSQLConnectionThreadPool extends CrudConnectionThreadPool {
     private static final int CONNECTIONS_COUNT = 10;
 
     public PostgreSQLConnectionThreadPool(final String database, String... createTableSqls) {
-        super(CONNECTIONS_COUNT, new Get() {
-            @Override
-            public Connection connection() throws Exception {
-                Class.forName("org.postgresql.Driver");
+        super(CONNECTIONS_COUNT, () -> {
+            Class.forName("org.postgresql.Driver");
 
-                String url = "jdbc:postgresql://" + database;
-                Connection result = DriverManager.getConnection(url);
+            String url = "jdbc:postgresql://" + database;
+            Connection result = DriverManager.getConnection(url);
 
-                return result;
-            }
+            return result;
         });
 
         for (String sql : createTableSqls) {

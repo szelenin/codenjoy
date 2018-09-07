@@ -4,7 +4,7 @@ package com.codenjoy.dojo.services.jdbc;
  * #%L
  * Codenjoy - it's a dojo-like platform from developers to developers.
  * %%
- * Copyright (C) 2016 Codenjoy
+ * Copyright (C) 2018 Codenjoy
  * %%
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as
@@ -22,16 +22,14 @@ package com.codenjoy.dojo.services.jdbc;
  * #L%
  */
 
+import com.codenjoy.dojo.services.ContextPathGetter;
 
-/**
- * Created by indigo on 13.08.2016.
- */
 public class SqliteConnectionThreadPoolFactory implements ConnectionThreadPoolFactory {
 
     private String dbFile;
 
-    public SqliteConnectionThreadPoolFactory(String dbFile) {
-        this.dbFile = dbFile;
+    public SqliteConnectionThreadPoolFactory(String dbFile, ContextPathGetter context) {
+        this.dbFile = dbFile.replace(".db", "_" + context.getContext() + ".db");
     }
 
     @Override

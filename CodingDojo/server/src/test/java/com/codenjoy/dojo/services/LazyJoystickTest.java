@@ -4,7 +4,7 @@ package com.codenjoy.dojo.services;
  * #%L
  * Codenjoy - it's a dojo-like platform from developers to developers.
  * %%
- * Copyright (C) 2016 Codenjoy
+ * Copyright (C) 2018 Codenjoy
  * %%
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as
@@ -34,7 +34,6 @@ import static org.mockito.Mockito.*;
  */
 public class LazyJoystickTest {
     private Game game;
-    private PlayerSpy playerSpy;
     private LazyJoystick lazy;
     private Joystick original;
 
@@ -43,8 +42,7 @@ public class LazyJoystickTest {
         original = mock(Joystick.class);
         game = mock(Game.class);
         when(game.getJoystick()).thenReturn(original);
-        playerSpy = new PlayerSpy();
-        lazy = new LazyJoystick(game, playerSpy);
+        lazy = new LazyJoystick(game);
     }
 
     @Test
@@ -244,6 +242,31 @@ public class LazyJoystickTest {
         verifyNoMoreInteractions(original);
 
         // when
+        lazy.tick();
+
+        // then
+        verifyNoMoreInteractions(original);
+    }
+
+    @Test
+    public void testCleanMessageAfterProcessing() {
+        // given
+        lazy.message("message");
+        lazy.tick();
+        verify(original).message("message");
+        verifyNoMoreInteractions(original);
+
+        // when
+        lazy.tick();
+
+        // then
+        verifyNoMoreInteractions(original);
+    }
+
+    @Test
+    public void testEmptyMessageSkipsProcessing() {
+        // when
+        lazy.message("");
         lazy.tick();
 
         // then

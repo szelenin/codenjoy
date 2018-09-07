@@ -4,7 +4,7 @@ package com.codenjoy.dojo.kata.model;
  * #%L
  * Codenjoy - it's a dojo-like platform from developers to developers.
  * %%
- * Copyright (C) 2016 Codenjoy
+ * Copyright (C) 2018 Codenjoy
  * %%
  * This program is free software:you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as
@@ -24,9 +24,15 @@ package com.codenjoy.dojo.kata.model;
 
 
 import com.codenjoy.dojo.kata.model.levels.Level;
+import com.codenjoy.dojo.kata.model.levels.LevelsPoolImpl;
+import com.codenjoy.dojo.kata.services.GameRunner;
 import com.codenjoy.dojo.kata.services.events.NextAlgorithmEvent;
 import com.codenjoy.dojo.kata.services.events.PassTestEvent;
-import com.codenjoy.dojo.services.*;
+import com.codenjoy.dojo.services.Dice;
+import com.codenjoy.dojo.services.EventListener;
+import com.codenjoy.dojo.services.Game;
+import com.codenjoy.dojo.services.multiplayer.Single;
+import com.codenjoy.dojo.services.printer.PrinterFactory;
 import com.codenjoy.dojo.utils.JsonUtils;
 import org.junit.Before;
 import org.junit.Test;
@@ -34,25 +40,20 @@ import org.mockito.ArgumentCaptor;
 
 import java.util.Arrays;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
 import static org.mockito.Matchers.anyInt;
 import static org.mockito.Mockito.*;
 
-/**
- * User:sanja
- * Date:19.12.13
- * Time:5:22
- */
 public class SingleTest {
 
     private EventListener listener1;
     private EventListener listener2;
     private EventListener listener3;
-    private Single game1;
-    private Single game2;
-    private Single game3;
+    private Game game1;
+    private Game game2;
+    private Game game3;
     private Dice dice;
-    private Kata kata;
+    private Kata field;
 
     // появляется другие игроки, игра становится мультипользовательской
     @Before
@@ -63,17 +64,26 @@ public class SingleTest {
                 "question3=answer3");
 
         dice = mock(Dice.class);
-        kata = new Kata(dice);
-        PrinterFactory factory = new PrinterFactoryImpl();
+        field = new Kata(dice);
+        PrinterFactory factory = new GameRunner().getPrinterFactory();
 
         listener1 = mock(EventListener.class);
-        game1 = new Single(kata, listener1, factory, Arrays.asList(level));
+        LevelsPoolImpl levelsPool1 = new LevelsPoolImpl(Arrays.asList(level));
+        Player player1 = new Player(listener1, levelsPool1);
+        game1 = new Single(player1, factory);
+        game1.on(field);
 
         listener2 = mock(EventListener.class);
-        game2 = new Single(kata, listener2, factory, Arrays.asList(level));
+        LevelsPoolImpl levelsPool2 = new LevelsPoolImpl(Arrays.asList(level));
+        Player player2 = new Player(listener2, levelsPool2);
+        game2 = new Single(player2, factory);
+        game2.on(field);
 
         listener3 = mock(EventListener.class);
-        game3 = new Single(kata, listener3, factory, Arrays.asList(level));
+        LevelsPoolImpl levelsPool3 = new LevelsPoolImpl(Arrays.asList(level));
+        Player player3 = new Player(listener3, levelsPool3);
+        game3 = new Single(player3, factory);
+        game3.on(field);
 
         dice(1, 4);
         game1.newGame();
@@ -93,7 +103,7 @@ public class SingleTest {
         assertField(expected, game1);
     }
 
-    private void assertField(String expected, Single game1) {
+    private void assertField(String expected, Game game1) {
         assertEquals(expected, JsonUtils.prettyPrint(game1.getBoardAsString().toString()).replace('\"', '\'').replaceAll("\\r", ""));
     }
 
@@ -151,7 +161,7 @@ public class SingleTest {
 
         game3.getJoystick().message("['answer3']");
 
-        game1.tick();
+        field.tick();
 
         // then
         asrtFl1("{\n" +
@@ -207,9 +217,9 @@ public class SingleTest {
     // игроков можно удалять из игры
     @Test
     public void shouldRemove() {
-        game3.destroy();
+        game3.close();
 
-        game1.tick();
+        field.tick();
 
         asrtFl1("{\n" +
                 "  'description':'description',\n" +
@@ -250,7 +260,7 @@ public class SingleTest {
         game2.getJoystick().message("['answer1']");
         game3.getJoystick().message("['answer1']");
 
-        game1.tick();
+        field.tick();
 
         asrtFl1("{\n" +
                 "  'description':'description',\n" +
@@ -305,7 +315,7 @@ public class SingleTest {
 
         // when
         game1.newGame();
-        game1.tick();
+        field.tick();
 
         asrtFl1("{\n" +
                 "  'description':'description',\n" +
@@ -360,7 +370,7 @@ public class SingleTest {
         game2.getJoystick().message("['wrong2']");
         game3.getJoystick().message("['wrong3']");
 
-        game1.tick();
+        field.tick();
 
         asrtFl1("{\n" +
                 "  'description':'description',\n" +
@@ -417,7 +427,7 @@ public class SingleTest {
         verifyNoMoreInteractions(listener3);
 
         // when
-        game1.tick();
+        field.tick();
 
         // then
         verifyNoMoreInteractions(listener1);
@@ -446,7 +456,7 @@ public class SingleTest {
                     game1.getJoystick(),
                     game2.getJoystick(),
                     game3.getJoystick()),
-                kata.getHeroes());
+                field.getHeroes());
     }
 
     private void givenUser1GoesToEnd() {
@@ -455,7 +465,7 @@ public class SingleTest {
         game2.getJoystick().message("['wrong']");
         game3.getJoystick().message("['wrong']");
 
-        game1.tick();
+        field.tick();
 
         asrtFl1("{\n" +
                 "  'description':'description',\n" +
@@ -508,7 +518,7 @@ public class SingleTest {
 
         // when
         game1.getJoystick().message("['answer1', 'answer2']");
-        game1.tick();
+        field.tick();
 
         // then
         asrtFl1("{\n" +
@@ -568,7 +578,7 @@ public class SingleTest {
 
         // when
         game1.getJoystick().message("['answer1', 'answer2', 'answer3']");
-        game1.tick();
+        field.tick();
 
         // then
         // wait level
@@ -629,7 +639,7 @@ public class SingleTest {
         
         // when
         game1.getJoystick().message(Elements.START_NEXT_LEVEL);
-        game1.tick();
+        field.tick();
 
         // then
         // win level with clean history
@@ -673,7 +683,7 @@ public class SingleTest {
                 "}");
 
         // when
-        game1.tick();
+        field.tick();
 
         // then 
         // still clear history
@@ -725,7 +735,7 @@ public class SingleTest {
 
         // when
         game1.getJoystick().message("['blablabla']");
-        game1.tick();
+        field.tick();
 
         // then
         asrtFl1("{\n" +
@@ -769,7 +779,7 @@ public class SingleTest {
 
         // when
         game1.getJoystick().message("['qweasadzxc']");
-        game1.tick();
+        field.tick();
 
         // then
         asrtFl1("{\n" +
@@ -821,4 +831,62 @@ public class SingleTest {
         assertNextAlgorithmEvent(listener1, "NextAlgorithm{complexity=30, time=0}");
     }
 
+    @Test
+    public void bug() {
+        // given
+        game1.getJoystick().message("['answer1']");
+        game2.getJoystick().message("['wrong']");
+        game3.getJoystick().message("['wrong']");
+
+        field.tick();
+
+        asrtFl1("{\n" +
+                "  'description':'description',\n" +
+                "  'history':[\n" +
+                "    {\n" +
+                "      'answer':'answer1',\n" +
+                "      'question':'question1',\n" +
+                "      'valid':true\n" +
+                "    }\n" +
+                "  ],\n" +
+                "  'level':0,\n" +
+                "  'nextQuestion':'question2',\n" +
+                "  'questions':[\n" +
+                "    'question1',\n" +
+                "    'question2'\n" +
+                "  ]\n" +
+                "}");
+
+        asrtFl2("{\n" +
+                "  'description':'description',\n" +
+                "  'history':[\n" +
+                "    {\n" +
+                "      'answer':'wrong',\n" +
+                "      'question':'question1',\n" +
+                "      'valid':false\n" +
+                "    }\n" +
+                "  ],\n" +
+                "  'level':0,\n" +
+                "  'nextQuestion':'question1',\n" +
+                "  'questions':[\n" +
+                "    'question1'\n" +
+                "  ]\n" +
+                "}");
+
+        asrtFl3("{\n" +
+                "  'description':'description',\n" +
+                "  'history':[\n" +
+                "    {\n" +
+                "      'answer':'wrong',\n" +
+                "      'question':'question1',\n" +
+                "      'valid':false\n" +
+                "    }\n" +
+                "  ],\n" +
+                "  'level':0,\n" +
+                "  'nextQuestion':'question1',\n" +
+                "  'questions':[\n" +
+                "    'question1'\n" +
+                "  ]\n" +
+                "}");
+    }
 }

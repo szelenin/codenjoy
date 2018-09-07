@@ -2,7 +2,7 @@
   #%L
   Codenjoy - it's a dojo-like platform from developers to developers.
   %%
-  Copyright (C) 2016 Codenjoy
+  Copyright (C) 2018 Codenjoy
   %%
   This program is free software: you can redistribute it and/or modify
   it under the terms of the GNU General Public License as
@@ -27,9 +27,8 @@
 <head>
     <meta http-equiv="Content-Type" content="text/html;">
     <title>Codenjoy</title>
-    <link href="${ctx}/resources/css/bootstrap.css" rel="stylesheet">
-    <script src="${ctx}/resources/js/jquery/jquery-3.1.0.js"></script>
-    <script src="${ctx}/resources/js/hotkeys.js"></script>
+    <link href="${ctx}/resources/css/bootstrap/css/bootstrap.min.css" rel="stylesheet">
+    <script src="${ctx}/resources/js/jquery/jquery-3.1.0.min.js"></script>
     <script>
         $(document).ready(function () {
             initHotkeys('${gameName}', '${ctx}/');
@@ -37,6 +36,7 @@
     </script>
 </head>
 <body>
+    <div id="settings" contextPath="${ctx}" gameName="${gameName}" playerName="${playerName}" code="${code}"></div>
     <div class="page-header">
         <h1>WTF! Something wrong...</h1>
     </div>

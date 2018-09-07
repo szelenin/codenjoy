@@ -4,7 +4,7 @@ package com.codenjoy.dojo.services.jdbc;
  * #%L
  * Codenjoy - it's a dojo-like platform from developers to developers.
  * %%
- * Copyright (C) 2016 Codenjoy
+ * Copyright (C) 2018 Codenjoy
  * %%
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as
@@ -34,13 +34,10 @@ public class SqliteConnectionThreadPool extends CrudConnectionThreadPool {
     private String databaseFile;
 
     public SqliteConnectionThreadPool(final String databaseFile, String... createTableSqls) {
-        super(ONLY_ONE_CONNECTION, new Get() {
-            @Override
-            public Connection connection() throws Exception {
-                Class.forName("org.sqlite.JDBC");
-                Connection result = DriverManager.getConnection("jdbc:sqlite:" + createDirs(databaseFile));
-                return result;
-            }
+        super(ONLY_ONE_CONNECTION, () -> {
+            Class.forName("org.sqlite.JDBC");
+            Connection result = DriverManager.getConnection("jdbc:sqlite:" + createDirs(databaseFile));
+            return result;
         });
         this.databaseFile = databaseFile;
 
@@ -50,7 +47,7 @@ public class SqliteConnectionThreadPool extends CrudConnectionThreadPool {
     }
 
     private static String createDirs(String databaseFile) {
-        new File(new File(databaseFile).getParent()).mkdirs();
+        new File(databaseFile).getParentFile().mkdirs();
         return databaseFile;
     }
 

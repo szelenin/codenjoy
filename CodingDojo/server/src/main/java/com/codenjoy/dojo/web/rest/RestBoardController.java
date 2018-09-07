@@ -4,7 +4,7 @@ package com.codenjoy.dojo.web.rest;
  * #%L
  * Codenjoy - it's a dojo-like platform from developers to developers.
  * %%
- * Copyright (C) 2016 Codenjoy
+ * Copyright (C) 2018 Codenjoy
  * %%
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as
@@ -24,6 +24,9 @@ package com.codenjoy.dojo.web.rest;
 
 
 import com.codenjoy.dojo.services.*;
+import com.codenjoy.dojo.services.dao.Registration;
+import com.codenjoy.dojo.services.multiplayer.MultiplayerType;
+import com.codenjoy.dojo.services.nullobj.NullGameType;
 import com.codenjoy.dojo.services.settings.Parameter;
 import org.apache.commons.lang.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -38,6 +41,8 @@ import java.util.*;
 public class RestBoardController {
 
     @Autowired private GameService gameService;
+    @Autowired private PlayerService playerService;
+    @Autowired private Registration registration;
     @Autowired private ServletContext servletContext;
 
     @RequestMapping(value = "/sprites", method = RequestMethod.GET)
@@ -71,8 +76,8 @@ public class RestBoardController {
     @ResponseBody
     public String getContext() {
         String contextPath = servletContext.getContextPath();
-        if (contextPath.charAt(contextPath.length() - 1) != '/') {
-            contextPath += '/';
+        if (contextPath.charAt(contextPath.length() - 1) == '/') {
+            contextPath += contextPath.substring(0, contextPath.length() - 1);
         }
         return contextPath;
     }
@@ -82,14 +87,14 @@ public class RestBoardController {
         private final String info;
         private final int boardSize;
         private final List<Parameter<?>> parameters;
-        private final boolean singleBoard;
+        private final MultiplayerType multiplayerType;
 
         GameTypeInfo(GameType gameType) {
             version = gameType.getVersion();
             info = gameType.toString();
             boardSize = gameType.getBoardSize().getValue();
             parameters = gameType.getSettings().getParameters();
-            singleBoard = gameType.isSingleBoard();
+            multiplayerType = gameType.getMultiplayerType();
         }
 
         public String getVersion() {
@@ -108,8 +113,8 @@ public class RestBoardController {
             return parameters;
         }
 
-        public boolean isSingleBoard() {
-            return singleBoard;
+        public MultiplayerType getMultiplayerType() {
+            return multiplayerType;
         }
     }
 

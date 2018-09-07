@@ -4,7 +4,7 @@ package com.codenjoy.dojo.kata.model.levels.algorithms;
  * #%L
  * Codenjoy - it's a dojo-like platform from developers to developers.
  * %%
- * Copyright (C) 2016 - 2017 Codenjoy
+ * Copyright (C) 2018 Codenjoy
  * %%
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as
@@ -27,13 +27,8 @@ package com.codenjoy.dojo.kata.model.levels.algorithms;
 //import org.approvaltests.legacycode.Range;
 import org.junit.Test;
 
-import static junit.framework.Assert.assertEquals;
+import static org.junit.Assert.assertEquals;
 
-/**
- * User: oleksandr.baglai
- * Date: 2/26/13
- * Time: 11:42 PM
- */
 public class MakeBricksAlgorithmTest {
 
     private static final int HHHHH = 5;

@@ -4,7 +4,7 @@ package com.codenjoy.dojo.services;
  * #%L
  * Codenjoy - it's a dojo-like platform from developers to developers.
  * %%
- * Copyright (C) 2016 Codenjoy
+ * Copyright (C) 2018 Codenjoy
  * %%
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as
@@ -28,6 +28,7 @@ public class PlayerInfo extends Player {
     private boolean saved;
     private boolean active;
     private boolean hidden;
+    private boolean hasAI;
 
     public PlayerInfo() {
         //
@@ -78,5 +79,13 @@ public class PlayerInfo extends Player {
 
     public void setHidden(boolean hidden) {
         this.hidden = hidden;
+    }
+
+    public boolean isAiPlayer() {
+        return hasAI;
+    }
+
+    public void setAIPlayer(boolean hasAI) {
+        this.hasAI = hasAI;
     }
 }

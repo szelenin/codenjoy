@@ -6,13 +6,18 @@
 
     <groupId>com.codenjoy</groupId>
     <artifactId>codenjoy-contest</artifactId>
-    <version>1.0.23</version>
+    <version>1.0.26</version>
     <packaging>war</packaging>
 
     <properties>
-        <java.version>1.7</java.version>
-        <spring.version>3.2.17.RELEASE</spring.version>
-        <jetty.version>8.1.16.v20140903</jetty.version>
+        <java.version>1.8</java.version>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <spring.version>4.3.18.RELEASE</spring.version>
+        <spring.security.version>4.2.7.RELEASE</spring.security.version>
+        <jetty.version>9.3.14.v20161028</jetty.version>
+        <jetty.jsp.version>9.2.19.v20160908</jetty.jsp.version>
+        <jetty.io.version>9.3.14.v20161028</jetty.io.version>
+        <javax-servlet.version>3.1.0</javax-servlet.version>
         <jackson.version>2.7.5</jackson.version>
         <javax.mail.version>1.4.7</javax.mail.version>
         <org.json.version>20160810</org.json.version>
@@ -33,7 +38,11 @@
 
         <maven-compiler.version>3.5.1</maven-compiler.version>
         <maven-war.version>2.6</maven-war.version>
-        <maven-license.version>1.9</maven-license.version>
+        <maven-license.version>1.16</maven-license.version>
+        <maven.compiler.source>1.8</maven.compiler.source>
+        <maven.compiler.target>1.8</maven.compiler.target>
+        <maven-source-plugin.version>3.0.1</maven-source-plugin.version>
+        <failOnMissingWebXml>false</failOnMissingWebXml>
     </properties>
 
     <dependencies>
@@ -54,11 +63,29 @@
             <scope>test</scope>
         </dependency>
 
+        <!-- Spring Security -->
+        <dependency>
+            <groupId>org.springframework.security</groupId>
+            <artifactId>spring-security-web</artifactId>
+            <version>${spring.security.version}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>org.springframework.security</groupId>
+            <artifactId>spring-security-config</artifactId>
+            <version>${spring.security.version}</version>
+        </dependency>
+
         <dependency>
             <groupId>org.eclipse.jetty</groupId>
             <artifactId>jetty-server</artifactId>
             <version>${jetty.version}</version>
             <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.eclipse.jetty</groupId>
+            <artifactId>jetty-io</artifactId>
+            <version>${jetty.io.version}</version>
         </dependency>
         <dependency>
             <groupId>org.eclipse.jetty</groupId>
@@ -74,12 +101,17 @@
         <dependency>
             <groupId>org.eclipse.jetty</groupId>
             <artifactId>jetty-jsp</artifactId>
-            <version>${jetty.version}</version>
+            <version>${jetty.jsp.version}</version>
             <scope>provided</scope>
         </dependency>
         <dependency>
-            <groupId>org.eclipse.jetty</groupId>
-            <artifactId>jetty-websocket</artifactId>
+            <groupId>org.eclipse.jetty.websocket</groupId>
+            <artifactId>websocket-server</artifactId>
+            <version>${jetty.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.eclipse.jetty.websocket</groupId>
+            <artifactId>websocket-client</artifactId>
             <version>${jetty.version}</version>
         </dependency>
         <dependency>
@@ -137,6 +169,12 @@
             <groupId>joda-time</groupId>
             <artifactId>joda-time</artifactId>
             <version>${joda-time.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>javax.servlet</groupId>
+            <artifactId>javax.servlet-api</artifactId>
+            <version>${javax-servlet.version}</version>
+            <scope>provided</scope>
         </dependency>
 
         <dependency>
@@ -228,7 +266,7 @@
                 </configuration>
             </plugin>
             <plugin>
-                <groupId>org.mortbay.jetty</groupId>
+                <groupId>org.eclipse.jetty</groupId>
                 <artifactId>jetty-maven-plugin</artifactId>
                 <version>${jetty.version}</version>
                 <configuration>
@@ -241,7 +279,7 @@
                 </configuration>
             </plugin>
             <plugin>
-                <groupId>org.mortbay.jetty</groupId>
+                <groupId>org.eclipse.jetty</groupId>
                 <artifactId>jetty-jspc-maven-plugin</artifactId>
                 <version>${jetty.version}</version>
                 <executions>
@@ -266,6 +304,7 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-source-plugin</artifactId>
+                <version>${maven-source-plugin.version}</version>
                 <executions>
                     <execution>
                         <id>attach-sources</id>
@@ -284,8 +323,7 @@
                     <licenseResolver>${project.baseUri}/src/license</licenseResolver>
                     <organizationName>Codenjoy</organizationName>
                     <projectName>Codenjoy - it's a dojo-like platform from developers to developers.</projectName>
-                    <failOnMissingHeader>true</failOnMissingHeader>
-                    <inceptionYear>2016</inceptionYear>
+                    <inceptionYear>2018</inceptionYear>
                     <canUpdateCopyright>false</canUpdateCopyright>
                     <canUpdateDescription>false</canUpdateDescription>
                     <canUpdateLicense>false</canUpdateLicense>

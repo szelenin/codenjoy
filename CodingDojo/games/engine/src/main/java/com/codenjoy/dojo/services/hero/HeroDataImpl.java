@@ -4,7 +4,7 @@ package com.codenjoy.dojo.services.hero;
  * #%L
  * Codenjoy - it's a dojo-like platform from developers to developers.
  * %%
- * Copyright (C) 2016 Codenjoy
+ * Copyright (C) 2018 Codenjoy
  * %%
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as
@@ -23,28 +23,32 @@ package com.codenjoy.dojo.services.hero;
  */
 
 
+import com.codenjoy.dojo.services.Game;
 import com.codenjoy.dojo.services.Point;
 import com.codenjoy.dojo.services.PointImpl;
 
-/**
- * Created by indigo on 2016-10-30.
- */
+import java.util.List;
+
+import static com.codenjoy.dojo.services.PointImpl.pt;
+
 public class HeroDataImpl implements HeroData {
 
     private final Point coordinate;
-    private final boolean isSingleMode;
+    private final boolean isMultiplayer;
     private final Object additionalData;
     private final int level;
+    private final List<Game> playersGroup;
 
-    HeroDataImpl(int level, Point coordinate, boolean isSingleMode, Object additionalData) {
+    HeroDataImpl(int level, Point coordinate, boolean isMultiplayer, Object additionalData) {
         if (coordinate == null) {
-            this.coordinate = PointImpl.pt(-1, -1);
+            this.coordinate = pt(-1, -1);
         } else {
             this.coordinate = new PointImpl(coordinate);
         }
         this.level = level;
-        this.isSingleMode = isSingleMode;
+        this.isMultiplayer = isMultiplayer;
         this.additionalData = additionalData;
+        this.playersGroup = null;
     }
 
     @Override
@@ -52,21 +56,25 @@ public class HeroDataImpl implements HeroData {
         return "HeroData[" +
                 "coordinate=" + coordinate +
                 ", level=" + level +
-                ", isSingleMode=" + isSingleMode +
+                ", multiplayer=" + isMultiplayer +
                 ", additionalData=" + additionalData +
                 ']';
     }
 
-    HeroDataImpl(int level, Point coordinate, boolean isSingleMode) {
-        this(level, coordinate, isSingleMode, null);
+    public HeroDataImpl(int level, Point coordinate, boolean isMultiplayer) {
+        this(level, coordinate, isMultiplayer, null);
     }
 
-    HeroDataImpl(Point coordinate, boolean isSingleMode) {
-        this(0, coordinate, isSingleMode, null);
+    public HeroDataImpl(int level, boolean isMultiplayer) {
+        this(level, null, isMultiplayer, null);
     }
 
-    HeroDataImpl(boolean isSingleMode) {
-        this(0, null, isSingleMode, null);
+    public HeroDataImpl(Point coordinate, boolean isMultiplayer) {
+        this(0, coordinate, isMultiplayer, null);
+    }
+
+    public HeroDataImpl(boolean isMultiplayer) {
+        this(0, null, isMultiplayer, null);
     }
 
     @Override
@@ -80,8 +88,13 @@ public class HeroDataImpl implements HeroData {
     }
 
     @Override
-    public boolean isSingleBoardGame() {
-        return isSingleMode;
+    public List<Game> playersGroup() {
+        return playersGroup;
+    }
+
+    @Override
+    public boolean isMultiplayer() {
+        return isMultiplayer;
     }
 
     @Override

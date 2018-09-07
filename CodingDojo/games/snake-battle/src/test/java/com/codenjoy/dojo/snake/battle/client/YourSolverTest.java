@@ -4,7 +4,7 @@ package com.codenjoy.dojo.snake.battle.client;
  * #%L
  * Codenjoy - it's a dojo-like platform from developers to developers.
  * %%
- * Copyright (C) 2016 - 2017 Codenjoy
+ * Copyright (C) 2018 Codenjoy
  * %%
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as
@@ -26,13 +26,11 @@ package com.codenjoy.dojo.snake.battle.client;
 import com.codenjoy.dojo.client.Solver;
 import com.codenjoy.dojo.services.Dice;
 import com.codenjoy.dojo.services.Direction;
-import com.codenjoy.dojo.services.PrinterFactory;
-import com.codenjoy.dojo.services.PrinterFactoryImpl;
 import org.junit.Before;
 import org.junit.Test;
 
 import static com.codenjoy.dojo.services.Direction.RIGHT;
-import static junit.framework.Assert.assertEquals;
+import static org.junit.Assert.assertEquals;
 import static org.mockito.Mockito.mock;
 
 /**
@@ -48,8 +46,6 @@ public class YourSolverTest {
     Board b;
 
     private Dice dice;
-
-    private PrinterFactory printer = new PrinterFactoryImpl();
 
     @Before
     public void setup() {

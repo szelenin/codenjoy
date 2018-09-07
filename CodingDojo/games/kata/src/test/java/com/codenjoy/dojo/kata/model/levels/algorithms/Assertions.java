@@ -4,7 +4,7 @@ package com.codenjoy.dojo.kata.model.levels.algorithms;
  * #%L
  * Codenjoy - it's a dojo-like platform from developers to developers.
  * %%
- * Copyright (C) 2016 - 2017 Codenjoy
+ * Copyright (C) 2018 Codenjoy
  * %%
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as
@@ -27,11 +27,6 @@ import com.codenjoy.dojo.kata.model.levels.Algorithm;
 
 import static org.junit.Assert.assertEquals;
 
-/**
- * User: oleksandr.baglai
- * Date: 2/25/13
- * Time: 11:37 PM
- */
 public class Assertions {
     public static void assertAlgorithm(String[] expected, Algorithm algorithm) {
         for (int index = 0; index < expected.length; index++) {

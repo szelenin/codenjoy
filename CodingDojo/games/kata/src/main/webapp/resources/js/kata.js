@@ -2,7 +2,7 @@
  * #%L
  * Codenjoy - it's a dojo-like platform from developers to developers.
  * %%
- * Copyright (C) 2016 Codenjoy
+ * Copyright (C) 2018 Codenjoy
  * %%
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as
@@ -29,7 +29,6 @@ game.enableDonate = false;
 game.enableAlways = true;
 game.enablePlayerInfo = false;
 game.enableLeadersTable = false;
-game.enableChat = false;
 game.enableHotkeys = true;
 game.enableAdvertisement = false;
 game.showBody = false;
@@ -52,7 +51,6 @@ var getQuestionFormatted = function(value) {
     }
 }
 
-// TODO same method in the chat.js - remove duplicate
 function unescapeUnicode(unicode) {
     var r = /\\u([\d\w]{4})/gi;
     var temp = unicode.replace(r, function (match, grp) {
@@ -62,6 +60,10 @@ function unescapeUnicode(unicode) {
 }
 
 var description = null;
+var setDescription = function(text) {
+    description = text;
+}
+
 var showDescriptionOnClick = function() {
     if (!game.registered) {
         return;
@@ -82,15 +84,15 @@ game.onBoardAllPageLoad = function() {
     showDescriptionOnClick();
 }
 
-game.playerDrawer = function (canvas, playerName, gameName, data, heroesData) {
-    canvas.resizeHeight(data.history.length + 1);
-    canvas.clear();
+game.drawBoard = function(drawer) {
+    drawer.clear();
 
-    description = unescapeUnicode(data.description);
+    var data = drawer.playerData.board;
+    setDescription(unescapeUnicode(data.description));
 
     var isWaitNext = (data.questions.length == 0);
     if (isWaitNext) {
-        canvas.drawText('Algorithm done! Wait next...',
+        drawer.drawText('Algorithm done! Wait next...',
                         getQuestionCoordinate(0), '#099');
         return;
     }
@@ -102,12 +104,12 @@ game.playerDrawer = function (canvas, playerName, gameName, data, heroesData) {
             var value = data.history[key];
             if (value.question == data.nextQuestion) continue;
 
-            canvas.drawText(getQuestionFormatted(value),
+            drawer.drawText(getQuestionFormatted(value),
                     getQuestionCoordinate(++index),
                     (value.valid)?'#090':'#900');
         }
     }
 
-    canvas.drawText(getQuestionFormatted(data.nextQuestion),
+    drawer.drawText(getQuestionFormatted(data.nextQuestion),
                 getQuestionCoordinate(++index), '#099');
 }

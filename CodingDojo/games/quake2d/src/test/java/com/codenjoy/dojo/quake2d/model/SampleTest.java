@@ -4,7 +4,7 @@ package com.codenjoy.dojo.quake2d.model;
  * #%L
  * Codenjoy - it's a dojo-like platform from developers to developers.
  * %%
- * Copyright (C) 2016 Codenjoy
+ * Copyright (C) 2018 Codenjoy
  * %%
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as
@@ -23,15 +23,18 @@ package com.codenjoy.dojo.quake2d.model;
  */
 
 import com.codenjoy.dojo.services.*;
+import com.codenjoy.dojo.services.printer.PrinterFactory;
+import com.codenjoy.dojo.services.printer.PrinterFactoryImpl;
 import com.codenjoy.dojo.utils.TestUtils;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.stubbing.OngoingStubbing;
 
-import static junit.framework.Assert.assertEquals;
-import static junit.framework.Assert.assertFalse;
-import static junit.framework.Assert.assertTrue;
+import static com.codenjoy.dojo.services.PointImpl.pt;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
 import static org.mockito.Matchers.anyInt;
 import static org.mockito.Mockito.*;
 
@@ -42,7 +45,7 @@ import static org.mockito.Mockito.*;
  */
 public class SampleTest {
 
-    private Sample game;
+    private Quake2D game;
     private Hero hero;
     private Dice dice;
     private EventListener listener;
@@ -70,7 +73,7 @@ public class SampleTest {
         Hero hero = level.getHero().get(0);
 
 
-        game = new Sample(level, dice);
+        game = new Quake2D(level, dice);
         listener = mock(EventListener.class);
         player = new Player(listener);
         game.newGame(player);
@@ -476,7 +479,7 @@ public class SampleTest {
                 "☼☼☼☼☼");
 
 
-        makeTicks(Sample.ABILITY_TIME_EXIST);
+        makeTicks(Quake2D.ABILITY_TIME_EXIST);
         ability = game.getAbilities().get(0);
         ability.move(3, 3);
 
@@ -496,7 +499,7 @@ public class SampleTest {
                 "☼☼☼☼☼");
 
 
-        makeTicks(Sample.ABILITY_TIME_EXIST);
+        makeTicks(Quake2D.ABILITY_TIME_EXIST);
         ability = game.getAbilities().get(0);
         ability.move(3, 3);
         player.hero.up();
@@ -526,7 +529,7 @@ public class SampleTest {
                 "☼    ☼" +
                 "☼ ☺  ☼" +
                 "☼☼☼☼☼☼");
-        makeTicks(Sample.ABILITY_TIME_EXIST);
+        makeTicks(Quake2D.ABILITY_TIME_EXIST);
         game.getAbilities().get(0).move(2, 2);
         hero.up();
         game.tick();
@@ -580,9 +583,9 @@ public class SampleTest {
                 "☼☼☼☼☼");
 
 
-        makeTicks(Sample.ABILITY_TIME_EXIST);
+        makeTicks(Quake2D.ABILITY_TIME_EXIST);
         ability = game.getAbilities().get(0);
-        game.getAbilities().add(0, new Ability(new PointImpl(3,3), Ability.Type.HEALTH));
+        game.getAbilities().add(0, new Ability(pt(3, 3), Ability.Type.HEALTH));
 
         ability.move(3, 3);
         player.hero.up();
@@ -607,7 +610,7 @@ public class SampleTest {
                 "☼    ☼" +
                 "☼ ☻  ☼" +
                 "☼☼☼☼☼☼");
-        makeTicks(Sample.ABILITY_TIME_EXIST);
+        makeTicks(Quake2D.ABILITY_TIME_EXIST);
         game.getAbilities().get(0).move(2, 2);
         otherPlayer.hero.up();
         game.tick();

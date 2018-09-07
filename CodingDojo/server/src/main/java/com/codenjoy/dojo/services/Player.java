@@ -4,7 +4,7 @@ package com.codenjoy.dojo.services;
  * #%L
  * Codenjoy - it's a dojo-like platform from developers to developers.
  * %%
- * Copyright (C) 2016 Codenjoy
+ * Copyright (C) 2018 Codenjoy
  * %%
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as
@@ -23,31 +23,40 @@ package com.codenjoy.dojo.services;
  */
 
 
+import com.codenjoy.dojo.client.Closeable;
+import com.codenjoy.dojo.services.nullobj.NullPlayer;
+import com.codenjoy.dojo.services.nullobj.NullPlayerGame;
 import com.codenjoy.dojo.transport.screen.ScreenRecipient;
 
-public class Player implements ScreenRecipient {
+public class Player implements ScreenRecipient, Closeable {
+
+    public static final Player ANONYMOUS = new Player("anonymous");
 
     private String name;
     private String code;
     private String data;
     private String callbackUrl;
-    private Protocol protocol;
     private String gameName;
     private String password;
     private PlayerScores scores;
     private Information info;
     private GameType gameType;
+    private InformationCollector eventListener;
+    private Closeable ai;
 
     public Player() {
     }
 
-    public Player(String name, String callbackUrl, GameType gameType, PlayerScores scores, Information info, Protocol protocol) {
+    public Player(String name) {
+        this.name = name;
+    }
+
+    public Player(String name, String callbackUrl, GameType gameType, PlayerScores scores, Information info) {
         this.name = name;
         this.callbackUrl = callbackUrl;
         this.gameType = gameType;
         this.scores = scores;
         this.info = info;
-        this.protocol = protocol;
     }
 
     public GameType getGameType() {
@@ -61,6 +70,10 @@ public class Player implements ScreenRecipient {
 
         if (o instanceof Player) {
             Player p = (Player)o;
+
+            if (p.name == null) {
+                return name == null;
+            }
 
             return (p.name.equals(name));
         }
@@ -108,7 +121,7 @@ public class Player implements ScreenRecipient {
         return scores.clear();
     }
 
-    public int getScore() {
+    public Object getScore() {
         return scores.getScore();
     }
 
@@ -120,20 +133,12 @@ public class Player implements ScreenRecipient {
         this.code = code;
     }
 
-    public Protocol getProtocol() {
-        return protocol;
-    }
-
-    public void setProtocol(Protocol protocol) {
-        this.protocol = protocol;
-    }
-
     public String getCode() {
         return code;
     }
 
     public String getGameName() {
-        return (gameType != null)?gameType.name():gameName;
+        return (gameType != null) ? gameType.name() : gameName;
     }
 
     public String getPassword() {
@@ -152,4 +157,31 @@ public class Player implements ScreenRecipient {
         this.data = data;
     }
 
+    public void setEventListener(InformationCollector eventListener) {
+        this.eventListener = eventListener;
+    }
+
+    public InformationCollector getEventListener() {
+        return eventListener;
+    }
+
+
+    public void setGameType(GameType gameType) {
+        this.gameType = gameType;
+    }
+
+    public void setAI(Closeable ai) {
+        this.ai = ai;
+    }
+
+    @Override
+    public void close() {
+        if (ai != null) {
+            ai.close();
+        }
+    }
+
+    public Closeable getAI() {
+        return ai;
+    }
 }

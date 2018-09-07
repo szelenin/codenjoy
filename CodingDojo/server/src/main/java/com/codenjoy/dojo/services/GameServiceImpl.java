@@ -4,7 +4,7 @@ package com.codenjoy.dojo.services;
  * #%L
  * Codenjoy - it's a dojo-like platform from developers to developers.
  * %%
- * Copyright (C) 2016 Codenjoy
+ * Copyright (C) 2018 Codenjoy
  * %%
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as
@@ -23,12 +23,15 @@ package com.codenjoy.dojo.services;
  */
 
 
-import com.codenjoy.dojo.services.lock.LockedGameType;
+import com.codenjoy.dojo.services.nullobj.NullGameType;
 import org.reflections.Reflections;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import java.util.*;
+
+import static java.util.stream.Collectors.toList;
+import static java.util.stream.Collectors.toMap;
 
 @Component("gameService")
 public class GameServiceImpl implements GameService {
@@ -36,30 +39,30 @@ public class GameServiceImpl implements GameService {
     @Autowired private TimerService timer;
     @Autowired private PlayerService players;
 
-    private Map<String, GameType> cache = new TreeMap<String, GameType>();
+    private Map<String, GameType> cache = new TreeMap<>();
 
     public GameServiceImpl() {
-        for (Class<? extends GameType> aClass : getGameClasses()) {
-            GameType gameType = loadGameType(aClass);
+        for (Class<? extends GameType> clazz : allGames()) {
+            GameType gameType = loadGameType(clazz);
             cache.put(gameType.name(), gameType);
         }
     }
 
-    private List<Class<? extends GameType>> getGameClasses() {
-        List<Class<? extends GameType>> games = new LinkedList<Class<? extends GameType>>();
-        games.addAll(findInPackage("com"));
-        games.addAll(findInPackage("org"));
-        games.addAll(findInPackage("net"));
-        Collections.sort(games, new Comparator<Class<? extends GameType>>() {
-            @Override
-            public int compare(Class<? extends GameType> o1, Class<? extends GameType> o2) {
-                return o1.getName().compareTo(o2.getName());
-            }
-        });
-        games.remove(LockedGameType.class);
-        games.remove(NullGameType.class);
-        games.remove(AbstractGameType.class);
-        return games;
+    private List<Class<? extends GameType>> allGames() {
+        List<Class<? extends GameType>> result = new LinkedList<>();
+        result.addAll(findInPackage("com"));
+        result.addAll(findInPackage("org"));
+        result.addAll(findInPackage("net"));
+
+        Collections.sort(result, Comparator.comparing(Class::getName));
+
+        result.remove(NullGameType.class);
+        result.remove(AbstractGameType.class);
+
+        // TODO исключить нерабочие игры
+        // result.stream().filter(it -> it.getPackage().toString().contains("chess")).findFirst().ifPresent(result::remove);
+
+        return result;
     }
 
     private Collection<? extends Class<? extends GameType>> findInPackage(String packageName) {
@@ -73,35 +76,31 @@ public class GameServiceImpl implements GameService {
 
     @Override
     public Map<String, List<String>> getSprites() {
-        Map<String, List<String>> result = new TreeMap<String, List<String>>();
-        for (Map.Entry<String, GameType> gameTypeEntry : cache.entrySet()) {
-            List<String> sprites = new LinkedList<String>();
-
-            GameType gameType = gameTypeEntry.getValue();
-
-            for (Enum e : gameType.getPlots()) {
-                sprites.add(e.name().toLowerCase());
-            }
-
-            result.put(gameType.name(), sprites);
-        }
-        return result;
+        return cache.entrySet().stream()
+                .map(entry -> new HashMap.SimpleEntry<>(
+                        entry.getValue().name(),
+                        Arrays.stream(entry.getValue().getPlots())
+                                .map(plot -> plot.name().toLowerCase())
+                                .collect(toList())
+                ))
+                .collect(toMap(
+                        entry -> entry.getKey(),
+                        entry -> entry.getValue()
+                ));
     }
 
     private GameType loadGameType(Class<? extends GameType> gameType) {
         try {
             return gameType.newInstance();
-        } catch (InstantiationException e) {
-            throw new RuntimeException(e);
-        } catch (IllegalAccessException e) {
+        } catch (InstantiationException | IllegalAccessException e) {
             throw new RuntimeException(e);
         }
     }
 
     @Override
-    public GameType getGame(String name) {   // TODO потестить
+    public GameType getGame(String name) {
         if (cache.containsKey(name)) {
-            return new LockedGameType(cache.get(name));
+            return cache.get(name);
         }
 
         return NullGameType.INSTANCE;

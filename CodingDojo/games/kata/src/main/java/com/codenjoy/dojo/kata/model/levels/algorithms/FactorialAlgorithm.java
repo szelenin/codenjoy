@@ -4,7 +4,7 @@ package com.codenjoy.dojo.kata.model.levels.algorithms;
  * #%L
  * Codenjoy - it's a dojo-like platform from developers to developers.
  * %%
- * Copyright (C) 2016 - 2017 Codenjoy
+ * Copyright (C) 2018 Codenjoy
  * %%
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as
@@ -31,7 +31,7 @@ import java.util.Map;
 public class FactorialAlgorithm extends AlgorithmLevelImpl {
 
     // TODO подумать над проблемами многопоточности
-    private static Map<Integer, BigInteger> cache = new java.util.HashMap<Integer, java.math.BigInteger>();
+    private static Map<Integer, BigInteger> cache = new java.util.HashMap<>();
 
     @Override
     public String get(int n) {

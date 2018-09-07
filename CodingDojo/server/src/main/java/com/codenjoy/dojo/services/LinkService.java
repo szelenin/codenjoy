@@ -4,7 +4,7 @@ package com.codenjoy.dojo.services;
  * #%L
  * Codenjoy - it's a dojo-like platform from developers to developers.
  * %%
- * Copyright (C) 2016 Codenjoy
+ * Copyright (C) 2018 Codenjoy
  * %%
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as
@@ -31,6 +31,7 @@ import java.util.concurrent.ConcurrentHashMap;
 
 @Component
 public class LinkService {
+
     private Map<String, Map<String, Object>> data = new ConcurrentHashMap<>();
     private long count = 0;
 

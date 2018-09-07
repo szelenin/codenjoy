@@ -4,7 +4,7 @@ package com.codenjoy.dojo.services;
  * #%L
  * Codenjoy - it's a dojo-like platform from developers to developers.
  * %%
- * Copyright (C) 2016 Codenjoy
+ * Copyright (C) 2018 Codenjoy
  * %%
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as
@@ -23,6 +23,8 @@ package com.codenjoy.dojo.services;
  */
 
 
+import org.springframework.util.StringUtils;
+
 /**
  * Когда пользователь зарегистрировался в игре создается новая игра в движке и джойстик игрока где-то там сохраняется во фреймворке.
  * Часто джойстик неразрывно связан с героем игрока, который бегает по полю. Так вот если этот герой помрет, и на его место появится новый
@@ -38,16 +40,14 @@ public class LazyJoystick implements Joystick, Tickable {
     }
     private final Game game;
 
-    private PlayerSpy player;
     private Direction direction;
 
     private String message;
     private int[] parameters;
     private boolean firstAct;
 
-    public LazyJoystick(Game game, PlayerSpy player) {
+    public LazyJoystick(Game game) {
         this.game = game;
-        this.player = player;
     }
 
     @Override
@@ -89,29 +89,31 @@ public class LazyJoystick implements Joystick, Tickable {
     public void tick() {
         if (direction == null && parameters == null && message == null) return; // TODO test me
 
-        if (message != null) {
-            game.getJoystick().message(message);
+        Joystick joystick = game.getJoystick();
+
+        if (!StringUtils.isEmpty(message)) {
+            joystick.message(message);
         }
 
         if (parameters != null && firstAct) {
-            game.getJoystick().act(parameters);
+            joystick.act(parameters);
         }
 
         if (direction != null) {
             switch (direction) {
-                case DOWN: game.getJoystick().down(); break;
-                case LEFT: game.getJoystick().left(); break;
-                case RIGHT: game.getJoystick().right(); break;
-                case UP: game.getJoystick().up(); break;
+                case DOWN: joystick.down(); break;
+                case LEFT: joystick.left(); break;
+                case RIGHT: joystick.right(); break;
+                case UP: joystick.up(); break;
             }
         }
 
         if (parameters != null && !firstAct) {
-            game.getJoystick().act(parameters);
+            joystick.act(parameters);
         }
 
         parameters = null;
         direction = null;
-        player.act();
+        message = null;
     }
 }

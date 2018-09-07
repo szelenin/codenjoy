@@ -4,7 +4,7 @@ package com.codenjoy.dojo.kata.model.levels;
  * #%L
  * Codenjoy - it's a dojo-like platform from developers to developers.
  * %%
- * Copyright (C) 2016 - 2017 Codenjoy
+ * Copyright (C) 2018 Codenjoy
  * %%
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as
@@ -26,9 +26,6 @@ package com.codenjoy.dojo.kata.model.levels;
 import java.util.Arrays;
 import java.util.List;
 
-/**
- * Created by indigo on 2017-03-04.
- */
 public class NullLevel implements Level {
 
     @Override

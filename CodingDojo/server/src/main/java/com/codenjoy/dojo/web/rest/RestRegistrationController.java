@@ -4,7 +4,7 @@ package com.codenjoy.dojo.web.rest;
  * #%L
  * Codenjoy - it's a dojo-like platform from developers to developers.
  * %%
- * Copyright (C) 2016 Codenjoy
+ * Copyright (C) 2018 Codenjoy
  * %%
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as
@@ -32,8 +32,9 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.ResponseBody;
 
-import java.util.LinkedList;
 import java.util.List;
+
+import static java.util.stream.Collectors.toList;
 
 @Controller
 @RequestMapping(value = "/rest")
@@ -45,22 +46,21 @@ public class RestRegistrationController {
     @RequestMapping(value = "/player/{playerName}/check/{code}", method = RequestMethod.GET)
     @ResponseBody
     public boolean checkUserLogin(@PathVariable("playerName") String playerName, @PathVariable("code") String code) {
-        String actualName = registration.getEmail(code);
-        return actualName != null && actualName.equals(playerName);
+        return registration.checkUser(playerName, code);
     }
 
     static class PlayerInfo {
         private final String gameType;
         private final String callbackUrl;
         private final String name;
-        private final int score;
+        private final String score;
         private final String code;
 
         PlayerInfo(Player player) {
             gameType = player.getGameType().name();
             callbackUrl = player.getCallbackUrl();
             name = player.getName();
-            score = player.getScore();
+            score = String.valueOf(player.getScore());
             code = player.getCode();
         }
 
@@ -76,7 +76,7 @@ public class RestRegistrationController {
             return name;
         }
 
-        public int getScore() {
+        public String getScore() {
             return score;
         }
 
@@ -88,11 +88,8 @@ public class RestRegistrationController {
     @RequestMapping(value = "/game/{gameName}/players", method = RequestMethod.GET)
     @ResponseBody
     public List<PlayerInfo> getPlayerForGame(@PathVariable("gameName") String gameName) {
-        List<Player> players = playerService.getAll(gameName);
-        List<PlayerInfo> result = new LinkedList<>();
-        for (Player player : players) {
-            result.add(new PlayerInfo(player));
-        }
-        return result;
+        return playerService.getAll(gameName).stream()
+                .map(PlayerInfo::new)
+                .collect(toList());
     }
 }

@@ -4,7 +4,7 @@ package com.codenjoy.dojo.services.lock;
  * #%L
  * Codenjoy - it's a dojo-like platform from developers to developers.
  * %%
- * Copyright (C) 2016 Codenjoy
+ * Copyright (C) 2018 Codenjoy
  * %%
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as
@@ -25,12 +25,14 @@ package com.codenjoy.dojo.services.lock;
 
 import com.codenjoy.dojo.services.Game;
 import com.codenjoy.dojo.services.Joystick;
-import com.codenjoy.dojo.services.Point;
 import com.codenjoy.dojo.services.hero.HeroData;
+import com.codenjoy.dojo.services.multiplayer.GameField;
+import com.codenjoy.dojo.services.multiplayer.GamePlayer;
 
 import java.util.concurrent.locks.ReadWriteLock;
 
 public class LockedGame implements Game {
+
     private final LockedJoystick joystick;
     private ReadWriteLock lock;
 
@@ -49,26 +51,6 @@ public class LockedGame implements Game {
     @Override
     public Joystick getJoystick() {
         return joystick.wrap(game.getJoystick());
-    }
-
-    @Override
-    public int getMaxScore() {
-        lock.writeLock().lock();
-        try {
-            return game.getMaxScore();
-        } finally {
-            lock.writeLock().unlock();
-        }
-    }
-
-    @Override
-    public int getCurrentScore() {
-        lock.writeLock().lock();
-        try {
-            return game.getCurrentScore();
-        } finally {
-            lock.writeLock().unlock();
-        }
     }
 
     @Override
@@ -102,10 +84,10 @@ public class LockedGame implements Game {
     }
 
     @Override
-    public void destroy() {
+    public void close() {
         lock.writeLock().lock();
         try {
-            game.destroy();
+            game.close();
         } finally {
             lock.writeLock().unlock();
         }
@@ -142,14 +124,32 @@ public class LockedGame implements Game {
     }
 
     @Override
-    public void tick() {
-        synchronized (this) { // TODO это я с перепугу написал, потому как lock.writeLock().lock() глючит
-            lock.writeLock().lock();
-            try {
-                game.tick();
-            } finally {
-                lock.writeLock().unlock();
-            }
+    public GamePlayer getPlayer() {
+        lock.writeLock().lock();
+        try {
+            return game.getPlayer();
+        } finally {
+            lock.writeLock().unlock();
+        }
+    }
+
+    @Override
+    public GameField getField() {
+        lock.writeLock().lock();
+        try {
+            return game.getField();
+        } finally {
+            lock.writeLock().unlock();
+        }
+    }
+
+    @Override
+    public void on(GameField field) {
+        lock.writeLock().lock();
+        try {
+            game.on(field);
+        } finally {
+            lock.writeLock().unlock();
         }
     }
 
@@ -161,5 +161,19 @@ public class LockedGame implements Game {
         } finally {
             lock.writeLock().unlock();
         }
+    }
+
+    public Game getWrapped() {
+        return game;
+    }
+
+    public static boolean equals(Game game1, Game game2) {
+        if (game1 instanceof LockedGame) {
+            game1 = ((LockedGame)game1).getWrapped();
+        }
+        if (game2 instanceof LockedGame) {
+            game2 = ((LockedGame)game2).getWrapped();
+        }
+        return game1 == game2;
     }
 }

@@ -1,10 +1,11 @@
+
 package com.codenjoy.dojo.services;
 
 /*-
  * #%L
  * Codenjoy - it's a dojo-like platform from developers to developers.
  * %%
- * Copyright (C) 2016 Codenjoy
+ * Copyright (C) 2018 Codenjoy
  * %%
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as
@@ -23,19 +24,26 @@ package com.codenjoy.dojo.services;
  */
 
 
-import com.codenjoy.dojo.services.chat.ChatService;
+import com.codenjoy.dojo.client.ClientBoard;
+import com.codenjoy.dojo.client.Closeable;
+import com.codenjoy.dojo.client.Solver;
+import com.codenjoy.dojo.client.WebSocketRunner;
+import com.codenjoy.dojo.services.controller.Controller;
 import com.codenjoy.dojo.services.dao.ActionLogger;
-import com.codenjoy.dojo.services.playerdata.ChatLog;
+import com.codenjoy.dojo.services.nullobj.NullGameType;
+import com.codenjoy.dojo.services.nullobj.NullPlayer;
+import com.codenjoy.dojo.services.nullobj.NullPlayerGame;
 import com.codenjoy.dojo.services.playerdata.PlayerData;
 import com.codenjoy.dojo.transport.screen.ScreenData;
 import com.codenjoy.dojo.transport.screen.ScreenRecipient;
-import com.codenjoy.dojo.transport.screen.ScreenSender;
+import org.fest.reflect.core.Reflection;
 import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
+import javax.annotation.PostConstruct;
 import java.io.IOException;
 import java.util.*;
 import java.util.concurrent.locks.ReadWriteLock;
@@ -43,39 +51,70 @@ import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 @Component("playerService")
 public class PlayerServiceImpl implements PlayerService {
-    public static final String CHAT = "#CHAT";
-    private static Logger logger = LoggerFactory.getLogger(PlayerServiceImpl.class);
-    private static String BOT_EMAIL_SUFFIX = "-super-ai@codenjoy.com";
 
+    private static Logger logger = DLoggerFactory.getLogger(PlayerServiceImpl.class);
+    
     private ReadWriteLock lock = new ReentrantReadWriteLock(true);
-    private Map<Player, String> cacheBoards = new HashMap<Player, String>();
+    private Map<Player, String> cacheBoards = new HashMap<>();
     private boolean registration = true;
-    private PrinterFactory printer = new PrinterFactoryImpl();
 
-    @Autowired private PlayerGames playerGames;
-    @Autowired private ScreenSender<ScreenRecipient, ScreenData> screenSender;
-    @Autowired private PlayerControllerFactory playerControllerFactory;
-    @Autowired private GameService gameService;
-    @Autowired private ChatService chatService;
-    @Autowired private AutoSaver autoSaver;
-    @Autowired private ActionLogger actionLogger;
+    @Autowired
+    protected PlayerGames playerGames;
+
+    @Autowired
+    private PlayerGamesView playerGamesView;
+
+    @Autowired
+    @Qualifier("playerController")
+    protected Controller playerController;
+
+    @Autowired
+    @Qualifier("screenController")
+    protected Controller screenController;
+
+    @Autowired
+    protected GameService gameService;
+
+    @Autowired
+    protected AutoSaver autoSaver;
+
+    @Autowired
+    protected ActionLogger actionLogger;
 
     @Value("${autoSaverEnable}")
-    private boolean autoSaverEnable;
+    protected boolean autoSaverEnable;
+
+    @PostConstruct
+    public void init() {
+        playerGames.init(lock);
+        playerGames.onAdd(playerGame -> {
+            Player player = playerGame.getPlayer();
+            Joystick joystick = playerGame.getJoystick();
+            playerController.registerPlayerTransport(player, joystick);
+            screenController.registerPlayerTransport(player, null);
+        });
+        playerGames.onRemove(playerGame -> {
+            Player player = playerGame.getPlayer();
+            playerController.unregisterPlayerTransport(player);
+            screenController.unregisterPlayerTransport(player);
+        });
+    }
 
     @Override
     public Player register(String name, String callbackUrl, String gameName) {
         lock.writeLock().lock();
         try {
-            logger.debug("Registered user {} in game {}", name, gameName);
+            if (logger.isDebugEnabled()) {
+                logger.debug("Registered user {} in game {}", name, gameName);
+            }
 
             if (!registration) {
                 return NullPlayer.INSTANCE;
             }
 
-            registerAIFor(name, gameName);
+            registerAIIfNeeded(name, gameName);
 
-            Player player = register(new PlayerSave(name, callbackUrl, gameName, 0, Protocol.WS.name(), null));
+            Player player = register(new PlayerSave(name, callbackUrl, gameName, 0, null));
 
             return player;
         } finally {
@@ -87,72 +126,116 @@ public class PlayerServiceImpl implements PlayerService {
     public void reloadAI(String name) {
         lock.writeLock().lock();
         try {
-            Player player = get(name);
-            playerGames.remove(player);
-            registerAI(player.getGameName(), player.getGameType(), name);
+            Player player = getPlayer(name);
+            registerAI(name, player.getGameType());
         } finally {
             lock.writeLock().unlock();
         }
     }
 
-    private void registerAIFor(String forPlayer, String gameName) {
-        if (forPlayer.endsWith(BOT_EMAIL_SUFFIX)) return;
+    private void registerAIIfNeeded(String forPlayer, String gameName) {
+        if (forPlayer.endsWith(WebSocketRunner.BOT_EMAIL_SUFFIX)) return;
 
         GameType gameType = gameService.getGame(gameName);
 
         // если в эту игру ai еще не играет
-        String aiName = gameName + BOT_EMAIL_SUFFIX;
+        String aiName = gameName + WebSocketRunner.BOT_EMAIL_SUFFIX;
         PlayerGame playerGame = playerGames.get(aiName);
 
         if (playerGame instanceof NullPlayerGame) {
-            registerAI(gameName, gameType, aiName);
+            registerAI(aiName, gameType);
         }
     }
 
-    private void registerAI(String gameName, GameType gameType, String aiName) {
-        if (gameType.newAI(aiName)) {
-            Player player = register(aiName, "127.0.0.1", gameName, 0, Protocol.WS.name(), null);
+    private void registerAI(String aiName, GameType gameType) {
+        Closeable ai = createAI(aiName, gameType);
+        if (ai != null) {
+            Player player = getPlayer(PlayerSave.get(aiName, "127.0.0.1", gameType.name(), 0, null), gameType);
+            player.setAI(ai);
         }
     }
 
     @Override
-    public Player register(PlayerSave save) {
-        String name = save.getName();
-        String gameName = save.getGameName();
+    public Player register(PlayerSave playerSave) {
+        String name = playerSave.getName();
+        String gameName = playerSave.getGameName();
 
         GameType gameType = gameService.getGame(gameName);
-        if (name.endsWith(BOT_EMAIL_SUFFIX)) {
-            gameType.newAI(name);
+        Player player = getPlayer(playerSave, gameType);
+
+        if (name.endsWith(WebSocketRunner.BOT_EMAIL_SUFFIX)) {
+            Closeable runner = createAI(name, gameType);
+            player.setAI(runner);
         }
 
-        return register(name, save.getCallbackUrl(), gameName, save.getScore(), save.getProtocol(), save.getSave());
+        return player;
     }
 
-    private Player register(String name, String callbackUrl, String gameName, int score, String protocol, String data) {
-        Player player = get(name);
-        GameType gameType = gameService.getGame(gameName);
+    private Closeable createAI(String aiName, GameType gameType) {
+        Class<? extends Solver> ai = gameType.getAI();
+        if (ai == null) {
+            return null;
+        }
+
+        try {
+            Solver solver;
+
+            try {
+                solver = Reflection.constructor()
+                        .withParameterTypes(Dice.class)
+                        .in(ai)
+                        .newInstance(gameType.getDice());
+            } catch (Exception e) {
+                solver = Reflection.constructor()
+                        .withParameterTypes()
+                        .in(ai)
+                        .newInstance(); // without dice
+            }
+
+            ClientBoard board = Reflection.constructor()
+                    .in(gameType.getBoard())
+                    .newInstance();
+
+            WebSocketRunner runner = runAI(aiName, solver, board);
+            return runner;
+        } catch (Exception e) {
+            return null;
+        }
+    }
+
+    protected WebSocketRunner runAI(String aiName, Solver solver, ClientBoard board) {
+        return WebSocketRunner.runAI(aiName, solver, board);
+    }
+
+    private Player getPlayer(PlayerSave playerSave, GameType gameType) {
+        String name = playerSave.getName();
+        String gameName = playerSave.getGameName();
+        String callbackUrl = playerSave.getCallbackUrl();
+
+        Player player = getPlayer(name);
 
         boolean newPlayer = (player instanceof NullPlayer) || !gameName.equals(player.getGameName());
         if (newPlayer) {
             playerGames.remove(player);
 
-            PlayerScores playerScores = gameType.getPlayerScores(score);
-            InformationCollector informationCollector = new InformationCollector(playerScores);
-
-            Game game = gameType.newGame(informationCollector, printer, data);
-            logger.info("Player {} starting new game {}", name, game);
+            PlayerScores playerScores = gameType.getPlayerScores(playerSave.getScore());
+            InformationCollector listener = new InformationCollector(playerScores);
 
             player = new Player(name, callbackUrl,
-                    gameType, playerScores, informationCollector,
-                    Protocol.valueOf(protocol.toUpperCase()));
+                    gameType, playerScores, listener);
+            player.setEventListener(listener);
 
-            PlayerController controller = playerControllerFactory.get(player.getProtocol());
+            player.setGameType(gameType);
+            PlayerGame playerGame = playerGames.add(player, playerSave);
 
-            playerGames.add(player, game, controller);
+            player = playerGame.getPlayer();
+
+            if (logger.isDebugEnabled()) {
+                logger.info("Player {} starting new game {}", name, playerGame.getGame());
+            }
         } else {
           // do nothing
         }
-
         return player;
     }
 
@@ -160,6 +243,11 @@ public class PlayerServiceImpl implements PlayerService {
     public void tick() {
         lock.writeLock().lock();
         try {
+            if (logger.isDebugEnabled()) {
+                logger.info("==================================================================================");
+                logger.info("PlayerService.tick() starts");
+            }
+
             long time = System.currentTimeMillis();
 
             if (autoSaverEnable) {
@@ -191,12 +279,9 @@ public class PlayerServiceImpl implements PlayerService {
     private void requestControls() {
         for (PlayerGame playerGame : playerGames) {
             Player player = playerGame.getPlayer();
-            PlayerController controller = playerGame.getController();
-
             try {
                 String board = cacheBoards.get(player);
-
-                controller.requestControl(player, board);
+                playerController.requestControl(player, board);
             } catch (IOException e) {
                 logger.error("Unable to send control request to player " + player.getName() +
                         " URL: " + player.getCallbackUrl(), e);
@@ -205,16 +290,21 @@ public class PlayerServiceImpl implements PlayerService {
     }
 
     private void sendScreenUpdates() {
-        HashMap<ScreenRecipient, ScreenData> map = new HashMap<ScreenRecipient, ScreenData>();
+        Map<ScreenRecipient, ScreenData> map = buildScreenData();
+        sendScreenForWebSockets(map);
+    }
+
+    private Map<ScreenRecipient, ScreenData> buildScreenData() {
+        Map<ScreenRecipient, ScreenData> map = new HashMap<>();
         cacheBoards.clear();
 
-        Map<String, GameData> gameDataMap = playerGames.getGamesDataMap();
+        Map<String, GameData> gameDataMap = playerGamesView.getGamesDataMap();
         for (PlayerGame playerGame : playerGames) {
             Game game = playerGame.getGame();
             Player player = playerGame.getPlayer();
             try {
-                GameType gameType = player.getGameType();
-                GameData gameData = gameDataMap.get(gameType.name());
+                String gameType = playerGame.getGameType().name();
+                GameData gameData = gameDataMap.get(gameType);
 
                 // TODO вот например для бомбера всем отдаются одни и те же борды, отличие только в паре спрайтов
                 Object board = game.getBoardAsString(); // TODO дольше всего строчка выполняется, прооптимизировать!
@@ -225,10 +315,8 @@ public class PlayerServiceImpl implements PlayerService {
 
                 map.put(player, new PlayerData(gameData.getBoardSize(),
                         encoded,
-                        gameType.name(),
+                        gameType,
                         player.getScore(),
-                        game.getMaxScore(),
-                        game.getCurrentScore(),
                         player.getMessage(),
                         gameData.getScores(),
                         gameData.getHeroesData()));
@@ -239,21 +327,16 @@ public class PlayerServiceImpl implements PlayerService {
             }
         }
 
-        // TODO:1 сделать вообще получение чата отдельным запросом, оно надо там каждую секунду?
-        String chatLog = chatService.getChatLog();
-        map.put(new ScreenRecipient() {
-            @Override
-            public String getName() {
-                return CHAT;
-            }
+        return map;
+    }
 
-            @Override
-            public String toString() {
-                return getName();
-            }
-        }, new ChatLog(chatLog));
-
-        screenSender.sendUpdates(map);
+    private void sendScreenForWebSockets(Map<ScreenRecipient, ScreenData> map) {
+        try {
+            screenController.requestControlToAll(map);
+        } catch (Exception e) {
+            logger.error("Unable to send screen updates to all players", e);
+            e.printStackTrace();
+        }
     }
 
     @Override
@@ -268,33 +351,24 @@ public class PlayerServiceImpl implements PlayerService {
 
     @Override
     public List<Player> getAll(String gameName) {
-        lock.writeLock().lock();
+        lock.readLock().lock();
         try {
-            return private_getAll(gameName);
+            return playerGames.getPlayers(gameName);
         } finally {
-            lock.writeLock().unlock();
+            lock.readLock().unlock();
         }
-    }
-
-    private List<Player> private_getAll(String gameName) {
-        List<Player> result = new LinkedList<Player>();
-        for (PlayerGame playerGame : playerGames) {
-            Player player = playerGame.getPlayer();
-            if (player.getGameName().equals(gameName)) {
-                result.add(player);
-            }
-        }
-        return result;
     }
 
     @Override
     public void remove(String name) {
         lock.writeLock().lock();
         try {
-            Player player = get(name);
+            Player player = getPlayer(name);
 
-            logger.debug("Unregistered user {} from game {}",
-                    player.getName(), player.getGameName());
+            if (logger.isDebugEnabled()) {
+                logger.debug("Unregistered user {} from game {}",
+                        player.getName(), player.getGameName());
+            }
 
             playerGames.remove(player);
         } finally {
@@ -337,7 +411,7 @@ public class PlayerServiceImpl implements PlayerService {
     public boolean contains(String name) {
         lock.readLock().lock();
         try {
-            return get(name) != NullPlayer.INSTANCE;
+            return getPlayer(name) != NullPlayer.INSTANCE;
         } finally {
             lock.readLock().unlock();
         }
@@ -347,10 +421,14 @@ public class PlayerServiceImpl implements PlayerService {
     public Player get(String name) {
         lock.readLock().lock();
         try {
-            return playerGames.get(name).getPlayer();
+            return getPlayer(name);
         } finally {
             lock.readLock().unlock();
         }
+    }
+
+    private Player getPlayer(String name) {
+        return playerGames.get(name).getPlayer();
     }
 
     @Override
@@ -416,7 +494,7 @@ public class PlayerServiceImpl implements PlayerService {
                 return playerGames.iterator().next().getPlayer();
             }
 
-            Iterator<Player> iterator = private_getAll(gameType).iterator();
+            Iterator<Player> iterator = playerGames.getPlayers(gameType).iterator();
             if (!iterator.hasNext()) return NullPlayer.INSTANCE;
             return iterator.next();
         } finally {
@@ -430,7 +508,7 @@ public class PlayerServiceImpl implements PlayerService {
         try {
             if (playerGames.isEmpty()) return NullGameType.INSTANCE;
 
-            return playerGames.iterator().next().getPlayer().getGameType();
+            return playerGames.iterator().next().getGameType();
         } finally {
             lock.readLock().unlock();
         }

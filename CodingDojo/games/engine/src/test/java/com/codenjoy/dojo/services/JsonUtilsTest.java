@@ -4,7 +4,7 @@ package com.codenjoy.dojo.services;
  * #%L
  * Codenjoy - it's a dojo-like platform from developers to developers.
  * %%
- * Copyright (C) 2016 - 2017 Codenjoy
+ * Copyright (C) 2018 Codenjoy
  * %%
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as
@@ -25,6 +25,7 @@ package com.codenjoy.dojo.services;
 
 import com.codenjoy.dojo.utils.JsonUtils;
 import org.json.JSONArray;
+import org.json.JSONObject;
 import org.junit.Test;
 
 import java.util.Arrays;
@@ -94,6 +95,38 @@ public class JsonUtilsTest {
                         "  ]\n" +
                         "}",
                 JsonUtils.prettyPrint("{'field1':'string1','field2':['string2','string3']}"));
+    }
+
+    @Test
+    public void testPrettyPrintStringWithString() throws Exception {
+        assertEquals("{\n" +
+                        "  'current':0,\n" +
+                        "  'lastPassed':-1,\n" +
+                        "  'multiple':false,\n" +
+                        "  'scores':true,\n" +
+                        "  'total':1\n" +
+                        "}",
+                JsonUtils.prettyPrint("{\"total\":1,\"scores\":true,\"current\":0,\"lastPassed\":-1,\"multiple\":false}"));
+    }
+
+    @Test
+    public void testPrettyPrintStringWithJsonObject() throws Exception {
+        assertEquals("{\n" +
+                        "  'current':0,\n" +
+                        "  'lastPassed':-1,\n" +
+                        "  'multiple':false,\n" +
+                        "  'scores':true,\n" +
+                        "  'total':1\n" +
+                        "}",
+                JsonUtils.prettyPrint(new JSONObject("{\"total\":1,\"scores\":true,\"current\":0,\"lastPassed\":-1,\"multiple\":false}")));
+    }
+
+    @Test
+    public void testPrettyPrintStringWithJsonArray() throws Exception {
+        assertEquals("[\n" +
+                        "  '1, 2, 3, 4'\n" +
+                        "]",
+                JsonUtils.prettyPrint(new JSONArray(Arrays.asList("1, 2, 3, 4"))));
     }
 
 }

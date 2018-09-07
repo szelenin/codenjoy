@@ -4,7 +4,7 @@ package com.codenjoy.dojo.services;
  * #%L
  * Codenjoy - it's a dojo-like platform from developers to developers.
  * %%
- * Copyright (C) 2016 Codenjoy
+ * Copyright (C) 2018 Codenjoy
  * %%
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as
@@ -23,73 +23,53 @@ package com.codenjoy.dojo.services;
  */
 
 
+import com.codenjoy.dojo.client.Closeable;
+import com.codenjoy.dojo.services.multiplayer.GameField;
+import com.codenjoy.dojo.services.nullobj.NullPlayerGame;
 import org.junit.Before;
 import org.junit.Test;
-import org.mockito.invocation.InvocationOnMock;
-import org.mockito.stubbing.Answer;
+import org.mockito.InOrder;
 
-import java.util.Arrays;
-import java.util.Calendar;
-import java.util.Iterator;
-import java.util.List;
+import java.util.*;
 
 import static org.junit.Assert.*;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyInt;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.*;
-import static org.mockito.Mockito.eq;
 
 public class PlayerGamesTest {
 
     private PlayerGames playerGames;
     private Player player;
-    private Game game;
-    private PlayerController controller;
-    private LazyJoystick lazyJoystick;
-    private Joystick joystick;
-    private PlayerSpy playerSpy;
-    private Statistics statistics;
+    private List<GameType> gameTypes = new LinkedList<>();
+    private Map<Player, Closeable> ais = new HashMap<>();
+    private List<Joystick> joysticks = new LinkedList<>();
+    private List<Joystick> lazyJoysticks = new LinkedList<>();
 
     @Before
     public void setUp() throws Exception {
+        playerGames = new PlayerGames();
         player = createPlayer("game", "player");
-
-        game = mock(Game.class);
-        joystick = mock(Joystick.class);
-        when(game.getJoystick()).thenReturn(joystick);
-
-        controller = mock(PlayerController.class);
-
-        doAnswer(new Answer<Object>() {
-            @Override
-            public Object answer(InvocationOnMock invocation) throws Throwable {
-                lazyJoystick = (LazyJoystick)invocation.getArguments()[1];
-                return null;
-            }
-        }).when(controller).registerPlayerTransport(eq(player), any(LazyJoystick.class));
-
-
-        statistics = mock(Statistics.class);
-        playerSpy = mock(PlayerSpy.class);
-        when(statistics.newPlayer(any(Player.class))).thenReturn(playerSpy);
-        playerGames = new PlayerGames(statistics);
-
-        playerGames.add(player, game, controller);
     }
+
+    private PlayerGame removed;
 
     @Test
     public void testRemove() throws Exception {
         assertFalse(playerGames.isEmpty());
         assertEquals(1, playerGames.size());
         PlayerGame playerGame = playerGames.get(player.getName());
+        GameField field = playerGame.getGame().getField();
+        playerGames.onRemove(pg -> removed = pg);
 
         playerGames.remove(player);
 
         assertTrue(playerGames.isEmpty());
         assertEquals(0, playerGames.size());
 
-        verifyRemove(playerGame);
+        verifyRemove(playerGame, field);
+        assertSame(removed, playerGame);
     }
 
     @Test
@@ -99,8 +79,7 @@ public class PlayerGamesTest {
         PlayerGame playerGame = playerGames.get(player.getName());
 
         assertSame(player, playerGame.getPlayer());
-        assertSame(game, playerGame.getGame());
-        assertSame(controller, playerGame.getController());
+//        assertSame(game, playerGame.getGame());
 
     }
 
@@ -131,20 +110,29 @@ public class PlayerGamesTest {
     }
 
     private Player addOtherPlayer(String game) {
-        Player otherPlayer = createPlayer(game, "player" + Calendar.getInstance().getTimeInMillis());
-        playerGames.add(otherPlayer, mock(Game.class), mock(PlayerController.class));
-        return otherPlayer;
+        return createPlayer(game, "player" + Calendar.getInstance().getTimeInMillis());
     }
 
     private Player createPlayer(String game, String name) {
         GameService gameService = mock(GameService.class);
         GameType gameType = mock(GameType.class);
+        gameTypes.add(gameType);
         PlayerScores scores = mock(PlayerScores.class);
         when(gameType.getPlayerScores(anyInt())).thenReturn(scores);
         when(gameType.name()).thenReturn(game);
         when(gameService.getGame(anyString())).thenReturn(gameType);
 
-        return new Player(name, "url", gameType, scores, mock(Information.class), Protocol.WS);
+        Player player = new Player(name, "url", gameType, scores, mock(Information.class));
+        Closeable ai = mock(Closeable.class);
+        ais.put(player, ai);
+        player.setAI(ai);
+
+        playerGames.onAdd(playerGame -> lazyJoysticks.add(playerGame.getJoystick()));
+
+        TestUtils.Env env = TestUtils.getPlayerGame(playerGames, player, inv -> mock(GameField.class));
+        joysticks.add(env.joystick);
+
+        return player;
     }
 
     @Test
@@ -158,6 +146,40 @@ public class PlayerGamesTest {
         assertEquals(2, players.size());
     }
 
+    @Test
+    public void testGetAll() throws Exception {
+        Player secondPlayer = addOtherPlayer();
+        Player thirdPlayer = addOtherPlayer("game2");
+
+        List<PlayerGame> result = playerGames.getAll("game");
+
+        assertEquals(2, result.size());
+        assertSame(player, result.get(0).getPlayer());
+        assertSame(secondPlayer, result.get(1).getPlayer());
+
+        List<PlayerGame> result2 = playerGames.getAll("game2");
+
+        assertEquals(1, result2.size());
+        assertSame(thirdPlayer, result2.get(0).getPlayer());
+    }
+
+    @Test
+    public void testGetAllPlayersByType() throws Exception {
+        Player secondPlayer = addOtherPlayer();
+        Player thirdPlayer = addOtherPlayer("game2");
+
+        List<Player> result = playerGames.getPlayers("game");
+
+        assertEquals(2, result.size());
+        assertSame(player, result.get(0));
+        assertSame(secondPlayer, result.get(1));
+
+        List<Player> result2 = playerGames.getPlayers("game2");
+
+        assertEquals(1, result2.size());
+        assertSame(thirdPlayer, result2.get(0));
+    }
+
     private Player addOtherPlayer() {
         return addOtherPlayer("game");
     }
@@ -168,8 +190,13 @@ public class PlayerGamesTest {
         Player player3 = addOtherPlayer();
 
         PlayerGame playerGame1 = playerGames.get(player.getName());
+        GameField field1 = playerGame1.getGame().getField();
+
         PlayerGame playerGame2 = playerGames.get(player2.getName());
+        GameField field2 = playerGame2.getGame().getField();
+
         PlayerGame playerGame3 = playerGames.get(player3.getName());
+        GameField field3 = playerGame3.getGame().getField();
 
         assertEquals(3, playerGames.size());
 
@@ -177,20 +204,20 @@ public class PlayerGamesTest {
 
         assertEquals(0, playerGames.size());
 
-        verifyRemove(playerGame1);
-        verifyRemove(playerGame2);
-        verifyRemove(playerGame3);
+        verifyRemove(playerGame1, field1);
+        verifyRemove(playerGame2, field2);
+        verifyRemove(playerGame3, field3);
     }
 
-    private void verifyRemove(PlayerGame playerGame2) {
-        verify(playerGame2.getGame()).destroy();
-        verify(playerGame2.getController()).unregisterPlayerTransport(playerGame2.getPlayer());
+    private void verifyRemove(PlayerGame playerGame, GameField field) {
+        verify(field).remove(playerGame.getGame().getPlayer());
+        verify(ais.get(playerGame.getPlayer())).close();
     }
 
     @Test
     public void testGetGameTypes() {
         Player player2 = addOtherPlayer("game2");
-        playerGames.add(player2, mock(Game.class), mock(PlayerController.class));
+        playerGames.add(player2, null);
 
         List<GameType> gameTypes = playerGames.getGameTypes();
 
@@ -202,123 +229,32 @@ public class PlayerGamesTest {
     @Test
     public void shouldTickLazyJoystickWhenTick() {
         // given
-        lazyJoystick.right();
+        lazyJoysticks.get(0).right();
 
         // when
         playerGames.tick();
 
         // then
-        verify(joystick).right();
+        verify(joysticks.get(0)).right();
     }
 
     @Test
-    public void shouldQuietTickPlayerSpyWhenTick() {
+    public void shouldTickGameType() {
         // given
-        lazyJoystick.right();
-        doThrow(new RuntimeException()).when(playerSpy).act();
+        addOtherPlayer("game2");
+        addOtherPlayer("game3");
+        addOtherPlayer("game2"); // второй игрок к уже существующей game2
 
         // when
         playerGames.tick();
 
         // then
-        verify(playerSpy).act();
-    }
 
-    @Test
-    public void shouldTickPlayerSpyWhenTick() {
-        // given
-        lazyJoystick.right();
+        InOrder order = inOrder(gameTypes.get(0), gameTypes.get(1), gameTypes.get(2));
 
-        // when
-        playerGames.tick();
-
-        // then
-        verify(playerSpy).act();
-    }
-
-    @Test
-    public void shouldTickStatisticsWhenTick() {
-        // when
-        playerGames.tick();
-
-        // then
-        verify(statistics).tick();
-    }
-
-    @Test
-    public void shouldQuietTickStatisticsWhenTick() {
-        // given
-        doThrow(new RuntimeException()).when(statistics).tick();
-
-        // when
-        playerGames.tick();
-
-        // then
-        verify(statistics).tick();
-    }
-
-    @Test
-    public void shouldNewGameWhenGameOverWhenTick() {
-        // given
-        when(game.isGameOver()).thenReturn(true);
-
-        // when
-        playerGames.tick();
-
-        // then
-        verify(game).newGame();
-    }
-
-    @Test
-    public void shouldQuietNewGameWhenGameOverWhenTick() {
-        // given
-        when(game.isGameOver()).thenReturn(true);
-        doThrow(new RuntimeException()).when(game).newGame();
-
-        // when
-        playerGames.tick();
-
-        // then
-        verify(game).newGame();
-    }
-
-    @Test
-      public void shouldTickGameWhenTickIfSingleGameType() {
-        // given
-        GameType gameType = playerGames.getGameTypes().get(0);
-        when(gameType.isSingleBoard()).thenReturn(true);
-
-        // when
-        playerGames.tick();
-
-        // then
-        verify(game).tick();
-    }
-
-    @Test
-    public void shouldTickGameWhenTickIfNotSingleGameType() {
-        // given
-        GameType gameType = playerGames.getGameTypes().get(0);
-        when(gameType.isSingleBoard()).thenReturn(false);
-
-        // when
-        playerGames.tick();
-
-        // then
-        verify(game).tick();
-    }
-
-    @Test
-    public void shouldNotRemovePlayerIfNoActive() {
-        // given
-        when(statistics.getPlayers(Statistics.WAIT_TICKS_MORE_OR_EQUALS, PlayerGames.TICKS_FOR_REMOVE)).thenReturn(Arrays.asList(player));
-        assertEquals(1, playerGames.size());
-
-        // when
-        playerGames.tick();
-
-        // then
-        assertEquals(1, playerGames.size());
+        order.verify(gameTypes.get(0)).quietTick();
+        order.verify(gameTypes.get(1)).quietTick();
+        order.verify(gameTypes.get(2)).quietTick();
     }
 
 

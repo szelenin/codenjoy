@@ -4,7 +4,7 @@ package com.codenjoy.dojo.services;
  * #%L
  * Codenjoy - it's a dojo-like platform from developers to developers.
  * %%
- * Copyright (C) 2016 Codenjoy
+ * Copyright (C) 2018 Codenjoy
  * %%
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as
@@ -31,7 +31,7 @@ public interface PlayerScores extends EventListener {
     /**
      * @return текущее значение очков, что успел набрать пользователь
      */
-    int getScore();
+    Object getScore();
 
     /**
      * @return очистка очков с возвращением последнего значения.

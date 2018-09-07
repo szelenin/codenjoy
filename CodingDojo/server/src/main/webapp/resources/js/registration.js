@@ -2,7 +2,7 @@
  * #%L
  * Codenjoy - it's a dojo-like platform from developers to developers.
  * %%
- * Copyright (C) 2016 Codenjoy
+ * Copyright (C) 2018 Codenjoy
  * %%
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as
@@ -35,7 +35,7 @@ function initRegistration(waitApprove, contextPath) {
         }
         if (waitApprove) {
             disable(true);
-            $.ajax({ url:contextPath + 'register?approved=' + $("#name").val(),
+            $.ajax({ url:contextPath + '/register?approved=' + $("#name").val(),
                 cache:false,
                 complete:function(data) {
                     window.location.replace(data.responseText);
@@ -54,3 +54,10 @@ function initRegistration(waitApprove, contextPath) {
         });
     });
 }
+
+$(document).ready(function () {
+    game.contextPath = getSettings('contextPath');
+    game.waitApprove = getSettings('waitApprove');
+
+    initRegistration(game.waitApprove, game.contextPath);
+});

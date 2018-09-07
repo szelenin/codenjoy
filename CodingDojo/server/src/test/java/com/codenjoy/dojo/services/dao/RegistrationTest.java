@@ -4,7 +4,7 @@ package com.codenjoy.dojo.services.dao;
  * #%L
  * Codenjoy - it's a dojo-like platform from developers to developers.
  * %%
- * Copyright (C) 2016 Codenjoy
+ * Copyright (C) 2018 Codenjoy
  * %%
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as
@@ -23,6 +23,7 @@ package com.codenjoy.dojo.services.dao;
  */
 
 
+import com.codenjoy.dojo.services.ContextPathGetter;
 import com.codenjoy.dojo.services.dao.Registration;
 import com.codenjoy.dojo.services.jdbc.SqliteConnectionThreadPoolFactory;
 import org.junit.After;
@@ -32,7 +33,7 @@ import org.junit.Test;
 import java.util.List;
 import java.util.Random;
 
-import static junit.framework.Assert.assertEquals;
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.*;
 
 public class RegistrationTest {
@@ -41,7 +42,15 @@ public class RegistrationTest {
 
     @Before
     public void setup() {
-        service = new Registration(new SqliteConnectionThreadPoolFactory("target/users.db" + new Random().nextInt()));
+        String dbFile = "target/users.db" + new Random().nextInt();
+        service = new Registration(
+                new SqliteConnectionThreadPoolFactory(dbFile,
+                        new ContextPathGetter() {
+                            @Override
+                            public String getContext() {
+                                return "context";
+                            }
+                        }));
     }
 
     @After

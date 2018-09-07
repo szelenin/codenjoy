@@ -4,7 +4,7 @@ package com.codenjoy.dojo.services;
  * #%L
  * Codenjoy - it's a dojo-like platform from developers to developers.
  * %%
- * Copyright (C) 2016 Codenjoy
+ * Copyright (C) 2018 Codenjoy
  * %%
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as
@@ -23,12 +23,15 @@ package com.codenjoy.dojo.services;
  */
 
 
+import org.json.JSONObject;
+
 import java.util.Deque;
 import java.util.LinkedList;
 import java.util.List;
 
 public class InformationCollector implements EventListener, ChangeLevelListener, Information {
-    private Deque<String> pool = new LinkedList<String>();
+
+    private Deque<String> pool = new LinkedList<>();
     private PlayerScores playerScores;
     private static final String LEVEL = "Level";
 
@@ -38,16 +41,25 @@ public class InformationCollector implements EventListener, ChangeLevelListener,
 
     @Override
     public void event(Object event) {
-        int before = playerScores.getScore();
+        Object before = playerScores.getScore();
         playerScores.event(event);
         add(before);
     }
 
-    private void add(int before) {
-        int delta = playerScores.getScore() - before;
+    private void add(Object before) {
+        int delta = delta(playerScores.getScore(), before);
         if (delta != 0) {
             pool.add(showSign(delta));
         }
+    }
+
+    private int delta(Object score, Object before) {
+        if (score instanceof Integer) {
+            return (Integer)score - (Integer)before;
+        } else if (score instanceof JSONObject) {
+            return ((JSONObject)score).getInt("score") - ((JSONObject)before).getInt("score");
+        }
+        throw new UnsupportedOperationException("Unknown type: " + score.getClass());
     }
 
     private String showSign(int integer) {
@@ -60,7 +72,7 @@ public class InformationCollector implements EventListener, ChangeLevelListener,
 
     @Override
     public String getMessage() {
-        List<String> result = new LinkedList<String>();
+        List<String> result = new LinkedList<>();
         String message;
         do {
             message = infoAboutLevelChangedMustBeLast(pool.pollFirst());

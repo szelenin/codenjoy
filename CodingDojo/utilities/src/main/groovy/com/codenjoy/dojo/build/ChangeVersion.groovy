@@ -1,5 +1,5 @@
-def fromVersion = '1.0.23'
-def toVersion = '1.0.24'
+def fromVersion = '1.0.25'
+def toVersion = '1.0.26'
 
 // select root directories
 def base = '..\\..\\..\\..\\..\\..\\..\\..\\';
@@ -34,6 +34,7 @@ def files = dirs3.collect {
     new File("$it/pom.xml")
 }
 files << new File("${base}games\\engine\\setup.bat")
+files << new File("${base}portable\\windows-cmd\\00-settings.bat")
 files << new File("${base}games\\pom.xml")
 files << new File("${base}builder\\README.md")
 files << new File("${base}pom.xml")

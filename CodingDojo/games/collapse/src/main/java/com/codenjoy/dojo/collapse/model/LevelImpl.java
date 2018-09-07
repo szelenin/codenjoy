@@ -4,7 +4,7 @@ package com.codenjoy.dojo.collapse.model;
  * #%L
  * Codenjoy - it's a dojo-like platform from developers to developers.
  * %%
- * Copyright (C) 2016 Codenjoy
+ * Copyright (C) 2018 Codenjoy
  * %%
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as
@@ -45,7 +45,7 @@ public class LevelImpl implements Level {
 
     @Override
     public List<Cell> getCells() {
-        List<Cell> result = new LinkedList<Cell>();
+        List<Cell> result = new LinkedList<>();
         for (int index = 0; index < map.length(); index++) {
             char ch = map.charAt(index);
             if (ch != Elements.BORDER.ch && ch != ' ') {
@@ -58,7 +58,7 @@ public class LevelImpl implements Level {
 
     @Override
     public List<Wall> getWalls() {
-        List<Wall> result = new LinkedList<Wall>();
+        List<Wall> result = new LinkedList<>();
         for (int index = 0; index < map.length(); index++) {
             char ch = map.charAt(index);
             if (ch == Elements.BORDER.ch) {

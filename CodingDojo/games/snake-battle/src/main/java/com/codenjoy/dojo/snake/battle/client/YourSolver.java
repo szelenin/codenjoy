@@ -4,7 +4,7 @@ package com.codenjoy.dojo.snake.battle.client;
  * #%L
  * Codenjoy - it's a dojo-like platform from developers to developers.
  * %%
- * Copyright (C) 2016 Codenjoy
+ * Copyright (C) 2018 Codenjoy
  * %%
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as
@@ -23,13 +23,11 @@ package com.codenjoy.dojo.snake.battle.client;
  */
 
 
-import com.codenjoy.dojo.client.Direction;
+import com.codenjoy.dojo.services.Direction;
 import com.codenjoy.dojo.client.Solver;
 import com.codenjoy.dojo.client.WebSocketRunner;
-import com.codenjoy.dojo.client.WebSocketRunner.Host;
 import com.codenjoy.dojo.services.Dice;
 import com.codenjoy.dojo.services.RandomDice;
-import com.codenjoy.dojo.services.algs.DeikstraFindWay;
 
 /**
  * User: your name
@@ -39,33 +37,25 @@ import com.codenjoy.dojo.services.algs.DeikstraFindWay;
  */
 public class YourSolver implements Solver<Board> {
 
-    private static final String USER_NAME = "user@mail.ru"; // TODO вписать свой ник (с которым регистрировался)
-
-    DeikstraFindWay way; // TODO можно воспользоваться нахождением кратчайшего пути при помощи getShortestWay()
-    // или использовать любой другой свой способ.
-
     private Dice dice;
     private Board board;
 
     YourSolver(Dice dice) {
         this.dice = dice;
-        way = new DeikstraFindWay();
     }
 
-    // TODO Необходимо изменить данный метод. Он должен возвращать осмысленное направление для дальнейшего движения змейки.
     @Override
     public String get(Board board) {
         this.board = board;
         if (board.isGameOver()) return "";
 
         return Direction.RIGHT.toString();
-//      return Direction.random().toString();
     }
 
     public static void main(String[] args) {
-//        WebSocketRunner.runOnServer("192.168.1.1:8080", // to use for local server
-        WebSocketRunner.run(WebSocketRunner.Host.REMOTE,  // to use for codenjoy.com server
-                USER_NAME,
+        WebSocketRunner.runClient(
+                // paste here board page url from browser after registration
+                "http://codenjoy.com:8080/codenjoy-contest/board/player/your@email.com?code=12345678901234567890",
                 new YourSolver(new RandomDice()),
                 new Board());
     }

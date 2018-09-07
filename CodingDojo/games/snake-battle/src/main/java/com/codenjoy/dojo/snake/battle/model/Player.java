@@ -4,7 +4,7 @@ package com.codenjoy.dojo.snake.battle.model;
  * #%L
  * Codenjoy - it's a dojo-like platform from developers to developers.
  * %%
- * Copyright (C) 2016 Codenjoy
+ * Copyright (C) 2018 Codenjoy
  * %%
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as
@@ -24,47 +24,21 @@ package com.codenjoy.dojo.snake.battle.model;
 
 
 import com.codenjoy.dojo.services.EventListener;
-import com.codenjoy.dojo.services.Point;
+import com.codenjoy.dojo.services.Joystick;
+import com.codenjoy.dojo.services.hero.HeroData;
+import com.codenjoy.dojo.services.multiplayer.GamePlayer;
 import com.codenjoy.dojo.snake.battle.model.board.Field;
 import com.codenjoy.dojo.snake.battle.model.hero.Hero;
 import com.codenjoy.dojo.snake.battle.services.Events;
 
-/**
- * Класс игрока. Тут кроме героя может подсчитываться очки. Тут же ивенты передабтся лиснеру фреймворка.
- */
-public class Player {
+public class Player extends GamePlayer<Hero, Field> {
 
-    private EventListener listener;
-    private int maxScore;
-    private int score;
     private Hero hero;
 
-    /**
-     * @param listener Это шпийон от фреймоврка. Ты должен все ивенты которые касаются конкретного пользователя сормить ему.
-     */
     public Player(EventListener listener) {
-        this.listener = listener;
-        clearScore();
+        super(listener);
     }
 
-    private void increaseScore() {
-        score = score + 1;
-        maxScore = Math.max(maxScore, score);
-    }
-
-    public int getMaxScore() {
-        return maxScore;
-    }
-
-    public int getScore() {
-        return score;
-    }
-
-    /**
-     * Борда может файрить ивенты юзера с помощью этого метода
-     *
-     * @param event тип ивента
-     */
     public void event(Events event) {
         switch (event) {
             case START:
@@ -72,18 +46,11 @@ public class Player {
                 break;
         }
 
-        if (listener != null) {
-            listener.event(event);
-        }
+        super.event(event);
     }
 
     private void start() {
         hero.setActive(true);
-    }
-
-    public void clearScore() {
-        score = 0;
-        maxScore = 0;
     }
 
     public Hero getHero() {
@@ -94,19 +61,13 @@ public class Player {
         this.hero = hero;
     }
 
-    /**
-     * Когда создается новая игра для пользователя, кто-то должен создать героя
-     *
-     * @param field борда
-     */
     public void newHero(Field field) {
-        Point pt = field.getFreeStart();
-        hero = new Hero(pt);
+        hero = new Hero(field.getFreeStart());
         hero.init(field);
     }
 
     public boolean isAlive() {
-        return isActive() && hero.isAlive();
+        return hero != null && isActive() && hero.isAlive();
     }
 
     public boolean isActive() {

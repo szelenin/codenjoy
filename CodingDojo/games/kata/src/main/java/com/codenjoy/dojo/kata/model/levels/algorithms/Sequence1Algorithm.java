@@ -4,7 +4,7 @@ package com.codenjoy.dojo.kata.model.levels.algorithms;
  * #%L
  * Codenjoy - it's a dojo-like platform from developers to developers.
  * %%
- * Copyright (C) 2016 - 2017 Codenjoy
+ * Copyright (C) 2018 Codenjoy
  * %%
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as
@@ -24,12 +24,9 @@ package com.codenjoy.dojo.kata.model.levels.algorithms;
 
 
 import com.codenjoy.dojo.kata.model.levels.AlgorithmLevelImpl;
-import com.sun.org.apache.bcel.internal.generic.Type;
-
-import java.math.BigInteger;
-import java.util.Map;
 
 public class Sequence1Algorithm extends AlgorithmLevelImpl {
+
     @Override
     public String get(int n) {
         StringBuilder b = new StringBuilder();

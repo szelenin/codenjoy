@@ -4,7 +4,7 @@ package com.codenjoy.dojo.web.controller;
  * #%L
  * Codenjoy - it's a dojo-like platform from developers to developers.
  * %%
- * Copyright (C) 2016 Codenjoy
+ * Copyright (C) 2018 Codenjoy
  * %%
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as
@@ -25,7 +25,7 @@ package com.codenjoy.dojo.web.controller;
 
 import com.codenjoy.dojo.services.*;
 import com.codenjoy.dojo.services.dao.Registration;
-import org.eclipse.jetty.util.StringUtil;
+import com.codenjoy.dojo.services.nullobj.NullPlayer;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Controller;
@@ -36,7 +36,9 @@ import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
 
 import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
+
+import static com.codenjoy.dojo.web.controller.Validator.CANT_BE_NULL;
+import static com.codenjoy.dojo.web.controller.Validator.CAN_BE_NULL;
 
 @Controller
 public class MainPageController {
@@ -44,10 +46,13 @@ public class MainPageController {
     @Autowired private PlayerService playerService;
     @Autowired private Registration registration;
     @Autowired private GameService gameService;
-    @Autowired private Statistics statistics;
+    @Autowired private Validator validator;
 
     @Value("${page.main}")
     private String mainPage;
+
+    @Value("${language}")
+    private String language;
 
     public MainPageController() {
     }
@@ -61,6 +66,14 @@ public class MainPageController {
     public String help(Model model) {
         model.addAttribute("gameNames", gameService.getGameNames());
         return "help";
+    }
+
+    @RequestMapping(value = "/help", params = "gameName", method = RequestMethod.GET)
+    public String helpForGame(Model model, @RequestParam("gameName") String gameName) {
+        validator.checkGameName(gameName, CANT_BE_NULL);
+
+        String suffix = (StringUtils.isEmpty(language)) ? "" : ("-" + language);
+        return "redirect:resources/help/" + gameName + suffix + ".html";
     }
 
     @RequestMapping(value = "/", method = RequestMethod.GET)
@@ -78,6 +91,8 @@ public class MainPageController {
                               @RequestParam("code") String code,
                               Model model)
     {
+        validator.checkCode(code, CAN_BE_NULL);
+
         String userIp = request.getRemoteAddr();
         model.addAttribute("ip", userIp);
 
@@ -85,7 +100,6 @@ public class MainPageController {
         request.setAttribute("registered", player != NullPlayer.INSTANCE);
         request.setAttribute("code", code);
         model.addAttribute("gameNames", gameService.getGameNames());
-        model.addAttribute("statistics", statistics.getPlayers(Statistics.WAIT_TICKS_LESS, 3));
         return "main";
     }
 

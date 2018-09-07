@@ -4,7 +4,7 @@ package com.codenjoy.dojo.snake.battle.model;
  * #%L
  * Codenjoy - it's a dojo-like platform from developers to developers.
  * %%
- * Copyright (C) 2016 Codenjoy
+ * Copyright (C) 2018 Codenjoy
  * %%
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as
@@ -27,13 +27,15 @@ import com.codenjoy.dojo.services.Direction;
 import com.codenjoy.dojo.services.Point;
 import com.codenjoy.dojo.services.PointImpl;
 
+import static com.codenjoy.dojo.services.PointImpl.pt;
+
 /**
  * @author Kors
  */
 public class DirectionUtils {
 
     public static Point getPointAt(Point p, Direction d) {
-        return new PointImpl(d.changeX(p.getX()), d.changeY(p.getY()));
+        return pt(d.changeX(p.getX()), d.changeY(p.getY()));
     }
 
     static void movePointTo(Point p, Direction d) {

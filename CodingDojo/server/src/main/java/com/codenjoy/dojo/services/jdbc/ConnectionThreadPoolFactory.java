@@ -4,7 +4,7 @@ package com.codenjoy.dojo.services.jdbc;
  * #%L
  * Codenjoy - it's a dojo-like platform from developers to developers.
  * %%
- * Copyright (C) 2016 Codenjoy
+ * Copyright (C) 2018 Codenjoy
  * %%
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as
@@ -23,9 +23,6 @@ package com.codenjoy.dojo.services.jdbc;
  */
 
 
-/**
- * Created by indigo on 13.08.2016.
- */
 public interface ConnectionThreadPoolFactory {
     CrudConnectionThreadPool create(String... createTableSqls);
 }

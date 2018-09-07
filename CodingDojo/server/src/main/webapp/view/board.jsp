@@ -2,7 +2,7 @@
   #%L
   Codenjoy - it's a dojo-like platform from developers to developers.
   %%
-  Copyright (C) 2016 Codenjoy
+  Copyright (C) 2018 Codenjoy
   %%
   This program is free software: you can redistribute it and/or modify
   it under the terms of the GNU General Public License as
@@ -28,49 +28,41 @@
 <head>
     <meta charset="utf-8">
     <title>Game boards</title>
-    <link href="${ctx}/resources/css/bootstrap.css" rel="stylesheet">
+    <link href="${ctx}/resources/css/bootstrap/css/bootstrap.min.css" rel="stylesheet">
     <link href="${ctx}/resources/css/dojo.css" rel="stylesheet">
 
     <script src="${ctx}/resources/js/google-analytics.js"></script>
 
-    <script src="${ctx}/resources/js/jquery/jquery-3.1.0.js"></script>
+    <script src="${ctx}/resources/js/jquery/jquery-3.1.0.min.js"></script>
     <script src="${ctx}/resources/js/jquery/jquery.tmpl.js"></script>
-    <script src="${ctx}/resources/js/jcanvas.js"></script>
+    <script src="${ctx}/resources/js/jcanvas/jcanvas.min.js"></script>
     <script src="${ctx}/resources/js/jquery/jquery.simplemodal-1.4.4.js"></script>
 
     <script src="${ctx}/resources/js/settings.js"></script>
     <script src="${ctx}/resources/js/ajax-loader.js"></script>
-    <script src="${ctx}/resources/js/board-data.js"></script>
+    <script src="${ctx}/resources/js/board-data-ws.js"></script>
     <script src="${ctx}/resources/js/canvases.js"></script>
     <script src="${ctx}/resources/js/canvases-text.js"></script>
+    <script src="${ctx}/resources/js/canvases-${gameName}.js"></script>
     <script src="${ctx}/resources/js/layout.js"></script>
     <script src="${ctx}/resources/js/donate.js"></script>
     <script src="${ctx}/resources/js/joystick.js"></script>
     <script src="${ctx}/resources/js/leaderstable.js"></script>
-    <script src="${ctx}/resources/js/chat.js"></script>
     <script src="${ctx}/resources/js/hotkeys.js"></script>
     <script src="${ctx}/resources/js/advertisement.js"></script>
     <script src="${ctx}/resources/js/board.js"></script>
     <script src="${ctx}/resources/js/${gameName}.js"></script>
-
-    <script>
-        $(document).ready(function() {
-            game.gameName = '${gameName}' || null;
-            game.playerName = '${playerName}' || null;
-            game.code = '${code}' || null;
-            game.allPlayersScreen = ${allPlayersScreen};
-
-            initBoardPage(game);
-        });
-    </script>
 </head>
 <body style="display:none;">
+    <div id="settings" contextPath="${ctx}" gameName="${gameName}" playerName="${playerName}" code="${code}" allPlayersScreen="${allPlayersScreen}"></div>
+
     <%@include file="forkMe.jsp"%>
+
     <div id="board_page">
         <%@include file="canvases.jsp"%>
-        <%@include file="chat.jsp"%>
-        <%@include file="advertisement.jsp"%>
         <%@include file="leaderstable.jsp"%>
+        <%@include file="info.jsp"%>
+        <%@include file="advertisement.jsp"%>
         <%@include file="donate.jsp"%>
         <%@include file="widgets.jsp"%>
     </div>

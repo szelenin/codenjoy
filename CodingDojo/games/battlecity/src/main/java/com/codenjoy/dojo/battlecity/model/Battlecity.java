@@ -4,7 +4,7 @@ package com.codenjoy.dojo.battlecity.model;
  * #%L
  * Codenjoy - it's a dojo-like platform from developers to developers.
  * %%
- * Copyright (C) 2016 Codenjoy
+ * Copyright (C) 2018 Codenjoy
  * %%
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as
@@ -27,13 +27,14 @@ package com.codenjoy.dojo.battlecity.model;
 import com.codenjoy.dojo.battlecity.model.levels.DefaultBorders;
 import com.codenjoy.dojo.battlecity.services.Events;
 import com.codenjoy.dojo.services.*;
+import com.codenjoy.dojo.services.printer.BoardReader;
 
 import java.util.LinkedList;
 import java.util.List;
 
-public class Battlecity implements Tickable, ITanks, Field {
+public class Battlecity implements Field {
 
-    private final Dice dice;
+    private Dice dice;
     private LinkedList<Tank> aiTanks;
     private int aiCount;
 
@@ -43,14 +44,14 @@ public class Battlecity implements Tickable, ITanks, Field {
 
     private List<Player> players = new LinkedList<Player>();
 
-    public Battlecity(int size, List<Construction> constructions, Tank... aiTanks) {
-        this(size, constructions, new DefaultBorders(size).get(), aiTanks);
+    public Battlecity(int size, Dice dice, List<Construction> constructions, Tank... aiTanks) {
+        this(size, dice, constructions, new DefaultBorders(size).get(), aiTanks);
     }
 
-    public Battlecity(int size, List<Construction> constructions,
+    public Battlecity(int size, Dice dice, List<Construction> constructions,
                       List<Border> borders, Tank... aiTanks) {
-        dice = new RandomDice();
         aiCount = aiTanks.length;
+        this.dice = dice;
         this.size = size;
         this.aiTanks = new LinkedList<Tank>();
         this.constructions = new LinkedList<Construction>(constructions);
@@ -111,7 +112,7 @@ public class Battlecity implements Tickable, ITanks, Field {
             } while (isBarrier(x, y) & c < size);
 
             if (!isBarrier(x, y)) {
-                addAI(new AITank(x, y, Direction.DOWN));
+                addAI(new AITank(x, y, dice, Direction.DOWN));
             }
         }
     }
@@ -123,22 +124,14 @@ public class Battlecity implements Tickable, ITanks, Field {
             }
         }
         for (Player player : players.toArray(new Player[0])) {
-            if (!player.getTank().isAlive()) {
+            if (!player.getHero().isAlive()) {
                 players.remove(player);
             }
         }
     }
 
-    @Override
-    public Joystick getJoystick() {
-       return players.get(0).getTank();
-    }
-
     void addAI(Tank tank) {
-        if (tank != null) {
-            tank.setField(this);
-        }
-        tank.setField(this);
+        tank.init(this);
         aiTanks.add(tank);
     }
 
@@ -210,7 +203,7 @@ public class Battlecity implements Tickable, ITanks, Field {
 
     private Player getPlayer(Tank tank) {
         for (Player player : players) {
-            if (player.getTank().equals(tank)) {
+            if (player.getHero().equals(tank)) {
                 return player;
             }
         }
@@ -259,7 +252,7 @@ public class Battlecity implements Tickable, ITanks, Field {
         LinkedList<Tank> result = new LinkedList<Tank>(aiTanks);
         for (Player player : players) {
 //            if (player.getTank().isAlive()) { // TODO разремарить с тестом
-                result.add(player.getTank());
+                result.add(player.getHero());
 //            }
         }
         return result;
@@ -295,12 +288,12 @@ public class Battlecity implements Tickable, ITanks, Field {
 
             @Override
             public Iterable<? extends Point> elements() {
-                List<Point> result = new LinkedList<Point>();
-                result.addAll(Battlecity.this.getBorders());
-                result.addAll(Battlecity.this.getTanks());
-                result.addAll(Battlecity.this.getConstructions());
-                result.addAll(Battlecity.this.getBullets());
-                return result;
+                return new LinkedList<Point>() {{
+                    addAll(Battlecity.this.getBorders());
+                    addAll(Battlecity.this.getTanks());
+                    addAll(Battlecity.this.getConstructions());
+                    addAll(Battlecity.this.getBullets());
+                }};
             }
         };
     }
@@ -320,4 +313,9 @@ public class Battlecity implements Tickable, ITanks, Field {
     public List<Border> getBorders() {
         return borders;
     }
+
+    public void setDice(Dice dice) {
+        this.dice = dice;
+    }
+
 }

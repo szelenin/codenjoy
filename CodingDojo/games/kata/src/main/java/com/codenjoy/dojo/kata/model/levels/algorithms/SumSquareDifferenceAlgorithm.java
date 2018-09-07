@@ -4,7 +4,7 @@ package com.codenjoy.dojo.kata.model.levels.algorithms;
  * #%L
  * Codenjoy - it's a dojo-like platform from developers to developers.
  * %%
- * Copyright (C) 2016 - 2017 Codenjoy
+ * Copyright (C) 2018 Codenjoy
  * %%
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as
@@ -26,10 +26,6 @@ package com.codenjoy.dojo.kata.model.levels.algorithms;
 import com.codenjoy.dojo.kata.model.levels.AlgorithmLevelImpl;
 
 /**
- * User: oleksandr.baglai
- * Date: 2/25/13
- * Time: 8:12 PM
- *
  * @author http://projecteuler.net/problem=6
  */
 public class SumSquareDifferenceAlgorithm extends AlgorithmLevelImpl {

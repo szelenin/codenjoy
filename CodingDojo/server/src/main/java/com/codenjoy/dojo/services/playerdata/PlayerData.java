@@ -4,7 +4,7 @@ package com.codenjoy.dojo.services.playerdata;
  * #%L
  * Codenjoy - it's a dojo-like platform from developers to developers.
  * %%
- * Copyright (C) 2016 Codenjoy
+ * Copyright (C) 2018 Codenjoy
  * %%
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as
@@ -31,22 +31,17 @@ public class PlayerData implements ScreenData {
 
     private Object board;
     private String gameName;
-    private int score;
-    private int maxLength;
-    private int length;
+    private Object score;
     private int boardSize;
     private String info;
     private JSONObject scores;
     private JSONObject heroesData;
 
-    public PlayerData(int boardSize, Object board, String gameName, int score,
-                      int maxLength, int length,
+    public PlayerData(int boardSize, Object board, String gameName, Object score,
                       String info, JSONObject scores, JSONObject heroesData) {
         this.board = board;
         this.gameName = gameName;
         this.score = score;
-        this.maxLength = maxLength;
-        this.length = length;
         this.boardSize = boardSize;
         this.info = info;
         this.scores = scores;
@@ -73,14 +68,13 @@ public class PlayerData implements ScreenData {
         return board;
     }
 
-    public int getScore() {
+    public Object getScore() {
         return score;
     }
 
     public int getBoardSize() {
         return boardSize;
     }
-
 
     @Override
     public String toString() {
@@ -89,8 +83,6 @@ public class PlayerData implements ScreenData {
                         "Board:'%s', " +
                         "GameName:'%s', " +
                         "Score:%s, " +
-                        "MaxLength:%s, " +
-                        "Length:%s, " +
                         "Info:'%s', " +
                         "Scores:'%s', " +
                         "HeroesData:'%s']",
@@ -98,8 +90,6 @@ public class PlayerData implements ScreenData {
                 board,
                 gameName,
                 score,
-                maxLength,
-                length,
                 getInfo(),
                 JsonUtils.toStringSorted(scores.toString()),
                 JsonUtils.toStringSorted(heroesData.toString()));
@@ -109,11 +99,4 @@ public class PlayerData implements ScreenData {
         return (info == null) ? "" : info;
     }
 
-    public int getMaxLength() {
-        return maxLength;
-    }
-
-    public int getLength() {
-        return length;
-    }
 }

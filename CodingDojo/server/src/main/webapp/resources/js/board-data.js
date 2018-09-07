@@ -2,7 +2,7 @@
  * #%L
  * Codenjoy - it's a dojo-like platform from developers to developers.
  * %%
- * Copyright (C) 2016 Codenjoy
+ * Copyright (C) 2018 Codenjoy
  * %%
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as
@@ -19,10 +19,10 @@
  * <http://www.gnu.org/licenses/gpl-3.0.html>.
  * #L%
  */
-function initBoards(players, allPlayersScreen, gameName, contextPath){
+function initBoards(players, allPlayersScreen, gameName, playerName, contextPath){
 
     var constructUrl = function() {
-        var url = contextPath + "screen?";
+        var url = contextPath + "/screen?";
 
         var playersPresent = players.length > 0;
         if (!playersPresent) {
@@ -38,15 +38,10 @@ function initBoards(players, allPlayersScreen, gameName, contextPath){
         $.ajax({ url:constructUrl(),
                 error:function(data) {
                     $('body').css('background-color', 'bisque');
+                    // TODO после этого сразу же отправляется второй запрос, и если серчер отключен то мы имеем купу ошибок js в консоли. Надо сделать так, чтобы при ошибке повторный запро отправлялся через секунду
                 },
                 success:function (data) {
                     $('body').css('background-color', 'white');
-
-                    // TODO:1 Вот тут надо вообще другим запросом чат брать из другого скрина, чтобы тут им и не пахло
-                    if (chatLog == null) { // uses for chat.js
-                        chatLog = data['#CHAT'].messages;
-                    }
-                    delete data['#CHAT'];
 
                     if (!!gameName) {  // TODO вот потому что dojo transport не делает подобной фильтрации - ее приходится делать тут.
                         var filtered = {};

@@ -4,7 +4,7 @@ package com.codenjoy.dojo.services;
  * #%L
  * Codenjoy - it's a dojo-like platform from developers to developers.
  * %%
- * Copyright (C) 2016 Codenjoy
+ * Copyright (C) 2018 Codenjoy
  * %%
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as
@@ -44,28 +44,28 @@ import static org.mockito.Mockito.*;
 public class AutoSaverTest {
 
     @Autowired private AutoSaver autoSaver;
-    @Autowired private SaveService saveService;
+    @Autowired private SaveService save;
 
     @Test
     public void testSaveEachNTicks() throws InterruptedException {
-        verifyNoMoreInteractions(saveService);
+        verifyNoMoreInteractions(save);
 
         autoSaver.tick();
 
-        verify(saveService, only()).loadAll();
-        reset(saveService);
+        verify(save, only()).loadAll();
+        reset(save);
 
         for (int count = 0; count < AutoSaver.TICKS - 2; count++) {
             autoSaver.tick();
         }
 
-        verifyNoMoreInteractions(saveService);
+        verifyNoMoreInteractions(save);
 
         autoSaver.tick();
 
         Thread.sleep(1000);
 
-        verify(saveService, only()).saveAll();
+        verify(save, only()).saveAll();
     }
 
 }

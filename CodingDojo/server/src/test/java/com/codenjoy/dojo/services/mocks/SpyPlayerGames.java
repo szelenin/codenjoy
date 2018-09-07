@@ -4,7 +4,7 @@ package com.codenjoy.dojo.services.mocks;
  * #%L
  * Codenjoy - it's a dojo-like platform from developers to developers.
  * %%
- * Copyright (C) 2016 Codenjoy
+ * Copyright (C) 2018 Codenjoy
  * %%
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as
@@ -24,13 +24,22 @@ package com.codenjoy.dojo.services.mocks;
 
 
 import com.codenjoy.dojo.services.PlayerGames;
+import com.codenjoy.dojo.services.PlayerGamesView;
 import org.springframework.context.annotation.Bean;
 
 import static org.mockito.Mockito.spy;
 
 public class SpyPlayerGames {
+    public static PlayerGames playerGames;
+
     @Bean(name = "playerGames")
     public PlayerGames bean() throws Exception {
-        return spy(new PlayerGames());
+        playerGames = new PlayerGames();
+        return spy(playerGames);
+    }
+
+    @Bean(name = "playerGamesView")
+    public PlayerGamesView bean2() throws Exception {
+        return spy(new PlayerGamesView());
     }
 }

@@ -4,7 +4,7 @@ package com.codenjoy.dojo.services;
  * #%L
  * Codenjoy - it's a dojo-like platform from developers to developers.
  * %%
- * Copyright (C) 2016 Codenjoy
+ * Copyright (C) 2018 Codenjoy
  * %%
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as
@@ -25,10 +25,7 @@ package com.codenjoy.dojo.services;
 
 import org.json.JSONObject;
 
-/**
- * Created by indigo on 2016-10-30.
- */
-class GameData {
+public class GameData {
     private final int boardSize;
     private final GuiPlotColorDecoder decoder;
     private final JSONObject scores;

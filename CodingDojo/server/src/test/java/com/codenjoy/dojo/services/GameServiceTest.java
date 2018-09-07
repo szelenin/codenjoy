@@ -4,7 +4,7 @@ package com.codenjoy.dojo.services;
  * #%L
  * Codenjoy - it's a dojo-like platform from developers to developers.
  * %%
- * Copyright (C) 2016 Codenjoy
+ * Copyright (C) 2018 Codenjoy
  * %%
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as
@@ -23,8 +23,11 @@ package com.codenjoy.dojo.services;
  */
 
 
+import com.codenjoy.dojo.services.mocks.FirstGameType;
 import com.codenjoy.dojo.services.mocks.MockPlayerService;
 import com.codenjoy.dojo.services.mocks.MockTimerService;
+import com.codenjoy.dojo.services.mocks.SecondGameType;
+import com.codenjoy.dojo.services.nullobj.NullGameType;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -37,8 +40,8 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
-import static junit.framework.Assert.assertEquals;
-import static junit.framework.Assert.assertTrue;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.reset;
 
 /**
@@ -80,10 +83,22 @@ public class GameServiceTest {
     }
 
     @Test
+    public void shouldGetGame() {
+        assertEquals(FirstGameType.class,
+                gameService.getGame("first").getClass());
+
+        assertEquals(SecondGameType.class,
+                gameService.getGame("second").getClass());
+
+        assertEquals(NullGameType.class,
+                gameService.getGame("not-exists").getClass());
+    }
+
+    @Test
     public void shouldGetPngForSprites() {
         Map<String, List<String>> sprites = gameService.getSprites();
 
-        List<String> errors = new LinkedList<String>();
+        List<String> errors = new LinkedList<>();
         for (Map.Entry<String, List<String>> entry : sprites.entrySet()) {
             for (String sprite : entry.getValue()) {
                 File file = new File(String.format("target/test-classes/sprite/%s/%s.png", entry.getKey(), sprite));

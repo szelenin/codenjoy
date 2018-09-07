@@ -4,7 +4,7 @@ package com.codenjoy.dojo.snake.battle.model.level;
  * #%L
  * Codenjoy - it's a dojo-like platform from developers to developers.
  * %%
- * Copyright (C) 2016 Codenjoy
+ * Copyright (C) 2018 Codenjoy
  * %%
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as
@@ -34,9 +34,6 @@ import java.util.List;
 
 import static com.codenjoy.dojo.snake.battle.model.Elements.*;
 
-/**
- * Полезный утилитный класс для получения объектов на поле из текстового вида.
- */
 public class LevelImpl implements Level {
     private final LengthToXY xy;
 

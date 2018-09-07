@@ -4,7 +4,7 @@ package com.codenjoy.dojo.kata.services;
  * #%L
  * Codenjoy - it's a dojo-like platform from developers to developers.
  * %%
- * Copyright (C) 2016 Codenjoy
+ * Copyright (C) 2018 Codenjoy
  * %%
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as
@@ -23,53 +23,47 @@ package com.codenjoy.dojo.kata.services;
  */
 
 
-import com.codenjoy.dojo.client.WebSocketRunner;
-import com.codenjoy.dojo.kata.client.ai.ApofigSolver;
+import com.codenjoy.dojo.client.ClientBoard;
+import com.codenjoy.dojo.client.Solver;
+import com.codenjoy.dojo.kata.client.Board;
+import com.codenjoy.dojo.kata.client.ai.AISolver;
 import com.codenjoy.dojo.kata.model.Kata;
-import com.codenjoy.dojo.kata.model.Single;
+import com.codenjoy.dojo.kata.model.Player;
 import com.codenjoy.dojo.kata.model.levels.Level;
 import com.codenjoy.dojo.kata.model.levels.LevelsLoader;
+import com.codenjoy.dojo.kata.model.levels.LevelsPool;
+import com.codenjoy.dojo.kata.model.levels.LevelsPoolImpl;
 import com.codenjoy.dojo.services.*;
-import com.codenjoy.dojo.services.hero.GameMode;
+import com.codenjoy.dojo.services.multiplayer.GameField;
+import com.codenjoy.dojo.services.multiplayer.GamePlayer;
+import com.codenjoy.dojo.services.multiplayer.MultiplayerType;
+import com.codenjoy.dojo.services.printer.BoardReader;
+import com.codenjoy.dojo.services.printer.PrinterFactory;
 import com.codenjoy.dojo.services.settings.Parameter;
+import org.apache.commons.lang.StringEscapeUtils;
+import org.json.JSONObject;
 
 import java.util.List;
 
 import static com.codenjoy.dojo.services.settings.SimpleParameter.v;
 
-/**
- * Генератор игор - реализация {@see GameType}
- * Обрати внимание на {@see GameRunner#SINGLE} - там реализовано переключение в режимы "все на одном поле"/"каждый на своем поле"
- */
 public class GameRunner extends AbstractGameType implements GameType {
 
-    public final static boolean SINGLE = GameMode.NOT_SINGLE_MODE;
     private List<Level> levels;
-    private Kata game;
 
     public GameRunner() {
         new Scores(0, settings);
         levels = LevelsLoader.getAlgorithms();
     }
 
-    private Kata newGame() {
-        return new Kata(new RandomDice());
+    @Override
+    public PlayerScores getPlayerScores(Object score) {
+        return new Scores((Integer) score, settings);
     }
 
     @Override
-    public PlayerScores getPlayerScores(int score) {
-        return new Scores(score, settings);
-    }
-
-    @Override
-    public Game newGame(EventListener listener, PrinterFactory factory, String save) {
-        if (!SINGLE || game == null) {
-            game = newGame();
-        }
-
-        Game game = new Single(this.game, listener, factory, levels);
-        game.newGame();
-        return game;
+    public GameField createGame() {
+        return new Kata(getDice());
     }
 
     @Override
@@ -88,13 +82,37 @@ public class GameRunner extends AbstractGameType implements GameType {
     }
 
     @Override
-    public boolean isSingleBoard() {
-        return SINGLE;
+    public Class<? extends Solver> getAI() {
+        return AISolver.class;
     }
 
     @Override
-    public boolean newAI(String aiName) {
-        ApofigSolver.start(aiName, WebSocketRunner.Host.REMOTE_LOCAL);
-        return true;
+    public Class<? extends ClientBoard> getBoard() {
+        return Board.class;
+    }
+
+    @Override
+    public MultiplayerType getMultiplayerType() {
+        return MultiplayerType.SINGLE;
+    }
+
+    @Override
+    public GamePlayer createPlayer(EventListener listener, String save, String playerName) {
+        LevelsPool pool = new LevelsPoolImpl(levels);
+        return new Player(listener, pool);
+    }
+
+    @Override
+    public PrinterFactory getPrinterFactory() {
+        return PrinterFactory.get((BoardReader boardReader, Player player) -> {
+            JSONObject result = new JSONObject();
+            result.put("description", StringEscapeUtils.escapeJava(player.getDescription()));
+            result.put("level", player.getLevel());
+            result.put("questions", player.getQuestions());
+            result.put("nextQuestion", player.getNextQuestion());
+            result.put("history", player.getLastHistory());
+
+            return result;
+        });
     }
 }

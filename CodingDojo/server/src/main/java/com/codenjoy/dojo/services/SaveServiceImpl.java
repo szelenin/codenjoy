@@ -4,7 +4,7 @@ package com.codenjoy.dojo.services;
  * #%L
  * Codenjoy - it's a dojo-like platform from developers to developers.
  * %%
- * Copyright (C) 2016 Codenjoy
+ * Copyright (C) 2018 Codenjoy
  * %%
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as
@@ -23,8 +23,8 @@ package com.codenjoy.dojo.services;
  */
 
 
-import com.codenjoy.dojo.services.chat.ChatService;
 import com.codenjoy.dojo.services.dao.Registration;
+import com.codenjoy.dojo.services.nullobj.NullPlayerGame;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
@@ -34,7 +34,6 @@ import java.util.*;
 public class SaveServiceImpl implements SaveService {
 
     @Autowired private GameSaver saver;
-    @Autowired private ChatService chatService;
     @Autowired private PlayerService playerService;
     @Autowired private Registration registration;
     @Autowired private PlayerGames playerGames;
@@ -44,7 +43,6 @@ public class SaveServiceImpl implements SaveService {
         for (PlayerGame playerGame : playerGames) {
             saveGame(playerGame);
         }
-        saver.saveChat(chatService.getMessages());
     }
 
     @Override
@@ -52,7 +50,6 @@ public class SaveServiceImpl implements SaveService {
         for (String playerName : saver.getSavedList()) {
             load(playerName);
         }
-        chatService.setMessages(saver.loadChat());
     }
 
     @Override
@@ -71,7 +68,19 @@ public class SaveServiceImpl implements SaveService {
     @Override
     public void load(String name) {
         PlayerSave save = saver.loadGame(name);
-        playerService.register(save); // TODO тут получается, что игра не загрузится, если ее подгрузить в момент когда игрок уже играет. Может это и ок. Его сперва надо отрубить
+        if (playerService.contains(name)) { // TODO test me
+            playerService.remove(name);
+        }
+        playerService.register(save);
+    }
+
+    @Override
+    public void load(String name, String gameName, String save) {
+        PlayerSave playerSave = new PlayerSave(name, "127.0.0.1", gameName, 0, save);
+        if (playerService.contains(name)) { // TODO test me
+            playerService.remove(name);
+        }
+        playerService.register(playerSave);
     }
 
     @Override
@@ -82,6 +91,7 @@ public class SaveServiceImpl implements SaveService {
             PlayerInfo info = new PlayerInfo(player);
             info.setCode(registration.getCode(player.getName()));
             info.setCallbackUrl(player.getCallbackUrl());
+            info.setAIPlayer(player.getAI() != null);
             map.put(player.getName(), info);
         }
 

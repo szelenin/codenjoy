@@ -4,7 +4,7 @@ package com.codenjoy.dojo.kata.services.events;
  * #%L
  * Codenjoy - it's a dojo-like platform from developers to developers.
  * %%
- * Copyright (C) 2016 - 2017 Codenjoy
+ * Copyright (C) 2018 Codenjoy
  * %%
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as
@@ -26,9 +26,6 @@ package com.codenjoy.dojo.kata.services.events;
 import com.codenjoy.dojo.services.settings.Parameter;
 import com.codenjoy.dojo.services.settings.SimpleParameter;
 
-/**
- * Created by indigo on 2017-04-03.
- */
 public class Scores {
     public static final Parameter<Integer> A = new SimpleParameter<>(100);
     public static final Parameter<Integer> B = new SimpleParameter<>(3);

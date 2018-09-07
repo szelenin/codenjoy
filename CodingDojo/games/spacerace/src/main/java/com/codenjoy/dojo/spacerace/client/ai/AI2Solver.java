@@ -4,7 +4,7 @@ package com.codenjoy.dojo.spacerace.client.ai;
  * #%L
  * Codenjoy - it's a dojo-like platform from developers to developers.
  * %%
- * Copyright (C) 2016 Codenjoy
+ * Copyright (C) 2018 Codenjoy
  * %%
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as
@@ -22,27 +22,19 @@ package com.codenjoy.dojo.spacerace.client.ai;
  * #L%
  */
 
-import com.codenjoy.dojo.client.Direction;
 import com.codenjoy.dojo.client.Solver;
-import com.codenjoy.dojo.client.WebSocketRunner;
 import com.codenjoy.dojo.services.Dice;
+import com.codenjoy.dojo.services.Direction;
 import com.codenjoy.dojo.services.Point;
 import com.codenjoy.dojo.services.PointImpl;
-import com.codenjoy.dojo.services.RandomDice;
 import com.codenjoy.dojo.spacerace.client.Board;
 import com.codenjoy.dojo.spacerace.model.Elements;
 
 import java.util.List;
 
-/**
- * User: your name
- * Это твой алгоритм AI для игры. Реализуй его на свое усмотрение.
- * Обрати внимание на {@see YourSolverTest} - там приготовлен тестовый
- * фреймворк для тебя.
- */
-public class AI2Solver implements Solver<Board> {
+import static com.codenjoy.dojo.services.PointImpl.pt;
 
-    private static final String USER_NAME = "kudriavtsev.oleksii@gmail.com";
+public class AI2Solver implements Solver<Board> {
 
     private Dice dice;
     private Board board;
@@ -116,28 +108,28 @@ public class AI2Solver implements Solver<Board> {
                 double newDistance = (double) Integer.MAX_VALUE;
                 double distance;
 
-                newMe = new PointImpl(me.getX() + 1, me.getY());
+                newMe = pt(me.getX() + 1, me.getY());
                 distance = newMe.distance(box);
                 if (distance < newDistance) {
                     newDistance = distance;
                     result = Direction.RIGHT;
                 }
 
-                newMe = new PointImpl(me.getX(), me.getY() + 1);
+                newMe = pt(me.getX(), me.getY() + 1);
                 distance = newMe.distance(box);
                 if (distance < newDistance) {
                     newDistance = distance;
                     result = Direction.DOWN;
                 }
 
-                newMe = new PointImpl(me.getX() - 1, me.getY());
+                newMe = pt(me.getX() - 1, me.getY());
                 distance = newMe.distance(box);
                 if (distance < newDistance) {
                     newDistance = distance;
                     result = Direction.LEFT;
                 }
 
-                newMe = new PointImpl(me.getX(), me.getY() - 1);
+                newMe = pt(me.getX(), me.getY() - 1);
                 distance = newMe.distance(box);
                 if (distance < newDistance) {
                     newDistance = distance;
@@ -287,19 +279,5 @@ public class AI2Solver implements Solver<Board> {
             return Direction.LEFT;
         }
         return bestDirection;
-    }
-
-    public static void main(String[] args) {
-//        LocalGameRunner.run(new GameRunner(),
-//                new ApofigSolver(new RandomDice()),
-//                new Board());
-        start(WebSocketRunner.DEFAULT_USER, WebSocketRunner.Host.LOCAL);
-    }
-
-    public static void start(String name, WebSocketRunner.Host host) {
-        WebSocketRunner.run(host,
-                name,
-                new AI2Solver(new RandomDice()),
-                new Board());
     }
 }

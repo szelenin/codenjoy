@@ -4,7 +4,7 @@ package com.codenjoy.dojo.services;
  * #%L
  * Codenjoy - it's a dojo-like platform from developers to developers.
  * %%
- * Copyright (C) 2016 Codenjoy
+ * Copyright (C) 2018 Codenjoy
  * %%
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as
@@ -27,21 +27,23 @@ import org.apache.commons.lang.StringUtils;
 
 public class PlayerSave {
 
-    public static final PlayerSave NULL = new PlayerSave(StringUtils.EMPTY, StringUtils.EMPTY, StringUtils.EMPTY, 0, StringUtils.EMPTY, StringUtils.EMPTY);
+    public static final PlayerSave NULL = new PlayerSave(StringUtils.EMPTY, StringUtils.EMPTY, StringUtils.EMPTY, 0, StringUtils.EMPTY);
 
-    private String protocol;
-    private int score;
+    private Object score;
     private String callbackUrl;
     private String gameName;
     private String name;
     private String save;
 
-    public PlayerSave(String name, String callbackUrl, String gameName, int score, String protocol, String save) {
+    public static PlayerSave get(String name, String callbackUrl, String gameName, Object score, String save) {
+        return new PlayerSave(name, callbackUrl, gameName, score, save);
+    }
+
+    public PlayerSave(String name, String callbackUrl, String gameName, Object score, String save) {
         this.name = name;
         this.gameName = gameName;
         this.callbackUrl = callbackUrl;
         this.score = score;
-        this.protocol = protocol;
         this.save = save;
     }
 
@@ -50,15 +52,10 @@ public class PlayerSave {
         this.gameName = save.getGameName();
         this.callbackUrl = save.getCallbackUrl();
         this.score = save.getScore();
-        this.protocol = save.getProtocol().name();
         this.save = save.getData();
     }
 
-    public String getProtocol() {
-        return protocol;
-    }
-
-    public int getScore() {
+    public Object getScore() {
         return score;
     }
 

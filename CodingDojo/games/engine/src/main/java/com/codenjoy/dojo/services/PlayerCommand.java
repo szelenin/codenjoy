@@ -4,7 +4,7 @@ package com.codenjoy.dojo.services;
  * #%L
  * Codenjoy - it's a dojo-like platform from developers to developers.
  * %%
- * Copyright (C) 2016 Codenjoy
+ * Copyright (C) 2018 Codenjoy
  * %%
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as
@@ -28,16 +28,22 @@ import java.util.regex.Pattern;
 
 public class PlayerCommand {
 
+    public static final String COMMAND = "(left|right|up|down|(act(\\((-?\\d*,?)+\\))?)|(message(\\('(.*)'\\))?))";
+
     private Joystick joystick;
     private String commandString;
 
     public PlayerCommand(Joystick joystick, String commandString) {
         this.joystick = joystick;
-        this.commandString = commandString.replaceAll(", +", ",").replaceAll(" +,", ",");
+        if (!commandString.startsWith("message('")) {
+            this.commandString = commandString.replaceAll(", +", ",").replaceAll(" +,", ",");
+        } else {
+            this.commandString = commandString.replaceAll("\n", "\\\\n").replaceAll("\r", "\\\\r");
+        }
     }
 
     public void execute(){
-        Pattern pattern = Pattern.compile("(left|right|up|down|(act(\\((-?\\d*,?)+\\))?)|(message(\\('(.*)'\\))?))", Pattern.CASE_INSENSITIVE);
+        Pattern pattern = Pattern.compile(COMMAND, Pattern.CASE_INSENSITIVE);
         Matcher matcher = pattern.matcher(commandString);
         while (matcher.find()) {
             String command = matcher.group(0);
@@ -72,7 +78,7 @@ public class PlayerCommand {
                     if (p == null) {
                         joystick.message("");
                     } else {
-                        joystick.message(p);
+                        joystick.message(p.replaceAll("\\\\n", "\n").replaceAll("\\\\r", "\r"));
                     }
                 } else {
                     System.out.println(commandString);

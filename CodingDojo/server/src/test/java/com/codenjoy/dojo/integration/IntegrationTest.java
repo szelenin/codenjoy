@@ -4,7 +4,7 @@ package com.codenjoy.dojo.integration;
  * #%L
  * Codenjoy - it's a dojo-like platform from developers to developers.
  * %%
- * Copyright (C) 2016 Codenjoy
+ * Copyright (C) 2018 Codenjoy
  * %%
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as
@@ -25,7 +25,6 @@ package com.codenjoy.dojo.integration;
 
 import com.codenjoy.dojo.integration.mocker.SpringMockerJettyRunner;
 import com.codenjoy.dojo.services.*;
-import com.codenjoy.dojo.services.chat.ChatServiceImpl;
 import com.codenjoy.dojo.services.dao.PlayerGameSaver;
 import com.codenjoy.dojo.services.dao.Registration;
 import com.codenjoy.dojo.services.mail.MailService;
@@ -46,7 +45,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Random;
 
-import static junit.framework.Assert.assertEquals;
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.verify;
@@ -56,7 +55,6 @@ public class IntegrationTest {
     private static PlayerService players;
     private static TimerService timer;
     private static SaveServiceImpl save;
-    private static ChatServiceImpl chat;
     private static GameServiceImpl game;
     private static MailService mail;
     private static WebDriver driver;
@@ -67,7 +65,7 @@ public class IntegrationTest {
 
     @BeforeClass
     public static void setupJetty() throws Exception {
-        runner = new SpringMockerJettyRunner("src/main/webapp", "/codenjoy-contest");
+        runner = new SpringMockerJettyRunner("src/main/webapp", "/appcontext");
         runner.spyBean("playerService");
         runner.spyBean("mailService");
         port = runner.start(new Random().nextInt(1000) + 10000);
@@ -79,7 +77,6 @@ public class IntegrationTest {
         players = runner.getBean(PlayerService.class, "playerService");
         timer = runner.getBean(TimerService.class, "timerService");
         save = runner.getBean(SaveServiceImpl.class, "saveService");
-        chat = runner.getBean(ChatServiceImpl.class, "chatService");
         game = runner.getBean(GameServiceImpl.class, "gameService");
         saver = runner.getBean(PlayerGameSaver.class, "playerGameSaver");
         mail = runner.getBean(MailService.class, "mailService");
@@ -89,7 +86,6 @@ public class IntegrationTest {
         save.removeAllSaves();
         players.removeAll();
 
-        new File("chat.log").delete();
         timer.resume();
     }
 
@@ -98,8 +94,6 @@ public class IntegrationTest {
     public void test() throws Exception {
         register(getEmail("apofig"), "pass", "snake");
         // TODO continue test
-//        sendChat("hello world");
-//
 //        save("[apofig]");
 //
 //        register(getEmail("zanefig"), "pass2", "sample");
@@ -123,7 +117,6 @@ public class IntegrationTest {
         // connectWebsocketClientToServer
         // useJoystick
         // useJoystickOnMultiBoardGame
-        // cantSendChatWhenNotMyUser
         // cantJoystickWhenNotMyUser
         // unregisterAtMainPage
         // spyAnotherUser
@@ -172,18 +165,6 @@ public class IntegrationTest {
         assertSaves(saves);
     }
 
-    private void sendChat(final String message) {
-        driver.findElement(By.id("chat-message")).sendKeys(message);
-        driver.findElement(By.id("chat-send")).click();
-
-        new WebDriverWait(driver, 500) {}.until(new ExpectedCondition<Object>() {
-            @Override
-            public Object apply(@Nullable WebDriver driverObject) {
-                return chat.getChatLog().toString().contains(message);
-            }
-        });
-    }
-
     private void register(String name, String password, String gameName) throws Exception {
         driver.get(url);
 
@@ -198,8 +179,8 @@ public class IntegrationTest {
 
         String activationUrl = getActivationUrl(name);
 
-        assertEquals("http://localhost:" + port + "/codenjoy-contest/register", driver.getCurrentUrl());
-        assertTrue(activationUrl.startsWith("http://localhost:" + port + "/codenjoy-contest/register?approve="));
+        assertEquals("http://localhost:" + port + "/appcontext/register", driver.getCurrentUrl());
+        assertTrue(activationUrl.startsWith("http://localhost:" + port + "/appcontext/register?approve="));
 
         driver.get(activationUrl);
     }

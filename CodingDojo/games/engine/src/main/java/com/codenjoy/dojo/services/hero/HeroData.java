@@ -4,7 +4,7 @@ package com.codenjoy.dojo.services.hero;
  * #%L
  * Codenjoy - it's a dojo-like platform from developers to developers.
  * %%
- * Copyright (C) 2016 Codenjoy
+ * Copyright (C) 2018 Codenjoy
  * %%
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as
@@ -23,21 +23,26 @@ package com.codenjoy.dojo.services.hero;
  */
 
 
+import com.codenjoy.dojo.services.Game;
 import com.codenjoy.dojo.services.Point;
 
-/**
- * Created by indigo on 2016-10-30.
- */
+import java.util.List;
+
 public interface HeroData {
+
+    HeroData NULL = new NullHeroData();
+
     /**
-     * @return Координаты игрока на поле из рассчета, что [0, 0] находится в левом нижнем углу
+     * @return Координаты игрока на поле из рассчета,
+     * что [0, 0] находится в левом нижнем углу
      */
     Point getCoordinate();
 
     /**
-     * @return true, усли игрок играет на общем поле, если же играет на своем - false
+     * @return true, усли игрок играет на общем поле,
+     * если же играет на своем отдельно от дургих игроков - false
      */
-    boolean isSingleBoardGame();
+    boolean isMultiplayer();
 
     /**
      * @return Возвращает номер уровня игры
@@ -48,4 +53,10 @@ public interface HeroData {
      * @return Дополнительные данные в любом формате
      */
     Object getAdditionalData();
+
+    /**
+     * @return Другие игроки, с кем играет сейчас текущий игрок
+     * TODO стоит полностью пересмотреть архитектуру групповых баттлов и перенести ее в Codenjoy фреймворк
+     */
+    List<Game> playersGroup();
 }

@@ -2,7 +2,7 @@
  * #%L
  * Codenjoy - it's a dojo-like platform from developers to developers.
  * %%
- * Copyright (C) 2016 Codenjoy
+ * Copyright (C) 2018 Codenjoy
  * %%
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as
@@ -25,20 +25,28 @@ using System.Threading;
 namespace Demo
 {
     class Program
-    {
+    {        
+        static string Server = "192.168.1.1:8080";              // to use for server on LAN
+        // static string Server = "127.0.0.1:8080";             // to use for localhost server
+        // static string Server = "tetrisj.jvmhost.net:12270";  // to use for codenjoy.com server
+
+        // this is your email
+		static string UserName = "user@email.com";
+		// you can get this code after registration on the server with your email
+		// http://server-ip:8080/codenjoy-contest/board/player/your@email.com?code=12345678901234567890    
+        static string Code = "01234567890123456789";
+
         static void Main(string[] args)
         {
-            // creating custom bomberman's Ai client
-            var bomber = new MyCustomBombermanAI("ApiDotNet");
-            
-            // starting thread with playing bomberman
-            (new Thread(bomber.Play)).Start();
-            
-            // waiting for "anykey"
-            Console.ReadKey();
+            Console.SetWindowSize(Console.LargestWindowWidth - 3, Console.LargestWindowHeight - 3);
 
-            // on "anykey" - asking bomberman's Ai client to stop. 
-            bomber.InitiateExit();
+            // creating custom bomberman's Ai client
+            var bomber = new YourSolver(UserName, Code, Server);
+
+            // starting thread with playing bomberman
+            Thread thread = new Thread(bomber.Play);
+            thread.Start();
+            thread.Join();
         }
     }
 }
